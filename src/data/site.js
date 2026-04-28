@@ -1,17 +1,17 @@
 export const site = {
-  name: "Your Name",
+  name: "Kayes Mahmud",
   designationLoop: ["Frontend Developer", "Web Developer", "React / Next.js Developer"],
   intro:
     "I build fast, accessible web experiences with clean UI, thoughtful UX, and modern front-end engineering.",
-  location: "Your City, Country",
-  email: "you@example.com",
-  phone: "+000 000 0000",
+  location: "Dhaka, Bangladesh",
+  email: "mahmudkayes30@gmail.com",
+  phone: "+880 1325-309204",
   whatsapp: "",
   socials: {
-    github: "https://github.com/",
-    linkedin: "https://www.linkedin.com/in/",
-    twitter: "https://twitter.com/",
-    facebook: "https://www.facebook.com/",
+    github: "https://github.com/kayesmahmud30",
+    linkedin: "https://www.linkedin.com/in/kayesmahmud30",
+    twitter: "https://twitter.com/kayesmahmud30",
+    facebook: "https://www.facebook.com/kayesmahmud40",
   },
 };
 

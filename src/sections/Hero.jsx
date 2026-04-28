@@ -69,25 +69,20 @@ export default function Hero() {
           >
             <div className="relative rounded-3xl border border-black/10 bg-[var(--card)] p-3 shadow-[0_30px_80px_-50px_rgba(0,0,0,0.35)] backdrop-blur dark:border-white/10">
               <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/30 via-white/5 to-transparent dark:from-white/10" />
-              <div className="relative overflow-hidden rounded-2xl bg-zinc-50 dark:bg-zinc-900">
+              <div className="relative overflow-hidden px-7 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-gray-700">
                 <Image
-                  src="/profile-placeholder.svg"
+                  src="/profile.jpg"
                   alt={`${site.name} profile photo`}
                   width={700}
                   height={700}
                   priority
-                  className="h-[360px] w-full object-cover sm:h-[420px]"
+                  className="h-90 border-white w-full object-cover sm:h-105"
                 />
               </div>
             </div>
-            <p className="mt-3 text-center text-xs text-zinc-500 dark:text-zinc-400">
-              Replace the placeholder with your professional photo in{" "}
-              <span className="font-medium">/public</span>.
-            </p>
           </motion.div>
         </div>
       </Container>
     </div>
   );
 }
-
