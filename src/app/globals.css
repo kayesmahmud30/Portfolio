@@ -1,8 +1,12 @@
 @import "tailwindcss";
+@import "../styles/utilities.css";
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --muted: #71717a;
+  --card: rgba(255, 255, 255, 0.7);
+  --card-border: rgba(0, 0, 0, 0.08);
 }
 
 @theme inline {
@@ -16,11 +20,34 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --muted: #a1a1aa;
+    --card: rgba(24, 24, 27, 0.55);
+    --card-border: rgba(255, 255, 255, 0.12);
   }
+}
+
+html.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --muted: #a1a1aa;
+  --card: rgba(24, 24, 27, 0.55);
+  --card-border: rgba(255, 255, 255, 0.12);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+::selection {
+  background: rgba(99, 102, 241, 0.25);
+}
+
+.section {
+  scroll-margin-top: 96px;
 }

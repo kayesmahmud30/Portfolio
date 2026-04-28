@@ -1,4 +1,21 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+## Developer Portfolio (Next.js + Tailwind + Framer Motion)
+
+Modern, clean, animated developer portfolio built with:
+
+- **Next.js (App Router)**
+- **React**
+- **Tailwind CSS**
+- **Framer Motion**
+- **React Icons**
+
+### Project structure
+
+- `src/app/`: routes (home + dynamic project details)
+- `src/components/`: reusable UI components (navbar, footer, etc.)
+- `src/sections/`: page sections (Hero/About/Skills/…)
+- `src/data/`: content/data objects (projects, skills, etc.)
+- `src/styles/`: small CSS utilities
+- `public/`: images, `resume.pdf`, assets
 
 ## Getting Started
 
@@ -6,31 +23,44 @@ First, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+Edit your content here:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `src/data/site.js` (name, intro, social links, contact info)
+- `src/data/projects.js` (projects + detail page content)
+- `src/data/skills.js`, `src/data/education.js`, `src/data/experience.js`
 
-## Learn More
+Replace images in `public/`:
 
-To learn more about Next.js, take a look at the following resources:
+- `public/profile-placeholder.svg` → replace with `profile.jpg` (or keep SVG)
+- `public/project-*.svg` → replace with real project screenshots
+- `public/resume.pdf` → add your resume file (the button still works as a placeholder if missing)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Deployment (Vercel) — step by step
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Push to GitHub**
+   - Create a new repo on GitHub
+   - Commit and push this project
 
-## Deploy on Vercel
+2. **Import on Vercel**
+   - Go to Vercel → “Add New…” → “Project”
+   - Import your GitHub repository
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. **Configure build settings**
+   - Framework Preset: **Next.js**
+   - Build Command: `npm run build`
+   - Output: (leave default)
+   - Install Command: `npm install`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4. **Deploy**
+   - Click **Deploy**
+
+5. **Optional: custom domain**
+   - Project → Settings → Domains → add your domain and follow DNS steps
+
+### Notes
+
+- The contact form posts to a **placeholder API route** at `src/app/api/contact/route.js`. Connect it to an email provider later if you want real delivery.
