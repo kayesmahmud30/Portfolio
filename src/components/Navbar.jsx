@@ -150,7 +150,7 @@ export default function Navbar() {
                     >
                       <span>{l.label}</span>
                       {isActive ? (
-                        <span className="text-xs text-zinc-500 dark:text-zinc-400">Active</span>
+                        <span className="text-xs text-zinc-500 dark:text-zinc-400">✔</span>
                       ) : null}
                     </button>
                   );
