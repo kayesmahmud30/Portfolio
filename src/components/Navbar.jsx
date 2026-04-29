@@ -118,7 +118,7 @@ export default function Navbar() {
               animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
               exit={{ y: -14, opacity: 0, filter: "blur(10px)" }}
               transition={{ duration: 0.25 }}
-              className="absolute left-3 right-3 top-3 rounded-2xl border border-black/10 bg-white/85 p-3 shadow-xl backdrop-blur dark:border-white/10 dark:bg-zinc-950/70"
+              className="sticky left-3 right-3 top-3 rounded-2xl border border-black/10 bg-white/85 p-3 shadow-xl backdrop-blur dark:border-white/10 dark:bg-zinc-950/70"
             >
               <div className="flex items-center justify-between px-2 py-1">
                 <div className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">Navigate</div>
