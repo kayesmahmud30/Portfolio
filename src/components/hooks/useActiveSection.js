@@ -2,33 +2,54 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-export function useActiveSection(sectionIds, { rootMargin = "-35% 0px -55% 0px" } = {}) {
+export function useActiveSection(sectionIds, { offset = 120 } = {}) {
   const ids = useMemo(() => (Array.isArray(sectionIds) ? sectionIds : []), [sectionIds]);
   const [activeId, setActiveId] = useState(ids[0] ?? "home");
 
   useEffect(() => {
     if (!ids.length) return;
 
-    const els = ids
-      .map((id) => document.getElementById(id))
-      .filter(Boolean);
+    let rafId = 0;
 
-    if (!els.length) return;
+    const updateActive = () => {
+      const sections = ids
+        .map((id) => document.getElementById(id))
+        .filter(Boolean);
 
-    const io = new IntersectionObserver(
-      (entries) => {
-        const visible = entries.filter((e) => e.isIntersecting);
-        if (!visible.length) return;
-        visible.sort((a, b) => (b.intersectionRatio ?? 0) - (a.intersectionRatio ?? 0));
-        const id = visible[0]?.target?.id;
-        if (id) setActiveId(id);
-      },
-      { root: null, threshold: [0.15, 0.25, 0.35, 0.5, 0.75], rootMargin }
-    );
+      if (!sections.length) return;
 
-    els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
-  }, [ids, rootMargin]);
+      // Position just below the sticky header.
+      const markerY = window.scrollY + offset;
+      let current = sections[0].id;
+
+      for (const section of sections) {
+        const top = section.getBoundingClientRect().top + window.scrollY;
+        if (top <= markerY) current = section.id;
+      }
+
+      // If user reaches the bottom, force the last section active.
+      const nearBottom =
+        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+      if (nearBottom) current = sections[sections.length - 1].id;
+
+      setActiveId((prev) => (prev === current ? prev : current));
+    };
+
+    const onScrollOrResize = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(updateActive);
+    };
+
+    updateActive();
+    window.addEventListener("scroll", onScrollOrResize, { passive: true });
+    window.addEventListener("resize", onScrollOrResize);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("scroll", onScrollOrResize);
+      window.removeEventListener("resize", onScrollOrResize);
+    };
+  }, [ids, offset]);
 
   return activeId;
 }
