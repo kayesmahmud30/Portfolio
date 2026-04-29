@@ -1,8 +1,8 @@
 export const education = [
   {
-    institution: "Your University / College",
-    degree: "B.Sc. in Computer Science (or similar)",
-    year: "2022 – 2026",
+    institution: "Govt. Tolaram College",
+    degree: "B.A Honors in Bengali Litaresur",
+    year: "2025 – 2030",
     description:
       "Focused on core CS foundations, web development, and building practical projects. Collaborated with peers, participated in presentations, and improved problem-solving skills.",
   },
