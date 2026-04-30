@@ -8,8 +8,11 @@ export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
 }
 
-export default function ProjectDetailsPage({ params }) {
-  const project = getProjectBySlug(params.slug);
+export default async function ProjectDetailsPage({ params }) {
+  const { slug } = await params;
+
+  const project = getProjectBySlug(slug);
+
   if (!project) return notFound();
 
   return (
@@ -22,10 +25,15 @@ export default function ProjectDetailsPage({ params }) {
           >
             ← Back to Projects
           </Link>
-          <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">{project.title}</h1>
+
+          <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+            {project.title}
+          </h1>
+
           <p className="mt-3 max-w-3xl text-base leading-7 text-zinc-600 dark:text-zinc-300">
             {project.summary}
           </p>
+
           <div className="mt-5 flex flex-wrap gap-2">
             {project.tags?.map((t) => (
               <span
@@ -43,7 +51,7 @@ export default function ProjectDetailsPage({ params }) {
         <div className="overflow-hidden rounded-3xl border border-black/10 bg-[var(--card)] backdrop-blur dark:border-white/10">
           <Image
             src={project.image}
-            alt={`${project.title} image`}
+            alt={project.title}
             width={1400}
             height={800}
             className="h-[320px] w-full object-cover sm:h-[420px]"
@@ -54,18 +62,23 @@ export default function ProjectDetailsPage({ params }) {
         <div className="mt-10 grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="rounded-3xl border border-black/10 bg-[var(--card)] p-7 backdrop-blur dark:border-white/10">
             <h2 className="text-lg font-semibold">Full description</h2>
+
             <p className="mt-3 whitespace-pre-line leading-7 text-zinc-600 dark:text-zinc-300">
               {project.description}
             </p>
 
             <h3 className="mt-8 text-base font-semibold">Challenges</h3>
+
             <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-7 text-zinc-600 dark:text-zinc-300">
               {project.challenges?.map((c) => (
                 <li key={c}>{c}</li>
               ))}
             </ul>
 
-            <h3 className="mt-8 text-base font-semibold">Future improvements</h3>
+            <h3 className="mt-8 text-base font-semibold">
+              Future improvements
+            </h3>
+
             <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-7 text-zinc-600 dark:text-zinc-300">
               {project.improvements?.map((i) => (
                 <li key={i}>{i}</li>
@@ -75,6 +88,7 @@ export default function ProjectDetailsPage({ params }) {
 
           <div className="rounded-3xl border border-black/10 bg-[var(--card)] p-7 backdrop-blur dark:border-white/10">
             <h2 className="text-lg font-semibold">Links</h2>
+
             <div className="mt-4 grid gap-3">
               <a
                 href={project.liveUrl}
@@ -84,6 +98,7 @@ export default function ProjectDetailsPage({ params }) {
               >
                 Live project →
               </a>
+
               <a
                 href={project.githubClientUrl}
                 target="_blank"
@@ -93,14 +108,9 @@ export default function ProjectDetailsPage({ params }) {
                 GitHub (client) →
               </a>
             </div>
-
-            <div className="mt-8 text-sm text-zinc-600 dark:text-zinc-300">
-              Want this page to include more screenshots, a video demo, or a case-study layout? I can extend it.
-            </div>
           </div>
         </div>
       </Container>
     </div>
   );
 }
-
