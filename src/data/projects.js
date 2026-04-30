@@ -1,14 +1,15 @@
 export const projects = [
   {
-    slug: "glass-dashboard",
-    title: "Glass Dashboard",
-    image: "/project-1.svg",
-    summary: "A responsive analytics dashboard with glassmorphism cards and smooth transitions.",
-    tags: ["Next.js", "Tailwind", "Framer Motion"],
+    slug: "english-janala",
+    title: "English Janala",
+    image: "/project-1.jpg",
+    summary:
+      "A responsive analytics dashboard with glassmorphism cards and smooth transitions.",
+    tags: ["HTML", "CSS", "Tailwind", "DaisyUI", "Javascript", "API"],
     description:
       "Glass Dashboard is a UI-focused project built to showcase layout composition, responsive grids, and motion. It includes reusable cards, skeleton loading states, and subtle hover/scroll interactions.",
-    liveUrl: "https://example.com",
-    githubClientUrl: "https://github.com/",
+    liveUrl: "https://englishjanalavocabulary.vercel.app/",
+    githubClientUrl: "https://github.com/kayesmahmud30/English-Janala",
     challenges: [
       "Balancing glassmorphism readability across light and dark themes.",
       "Designing motion that feels premium but never distracting.",
@@ -24,7 +25,8 @@ export const projects = [
     slug: "portfolio-starter",
     title: "Portfolio Starter",
     image: "/project-2.svg",
-    summary: "A minimal portfolio starter with sections, scroll spy, and dynamic project pages.",
+    summary:
+      "A minimal portfolio starter with sections, scroll spy, and dynamic project pages.",
     tags: ["React", "Next.js", "UI/UX"],
     description:
       "A clean and modular portfolio template with accessible navigation, animated section reveals, and project detail routes. Built for quick customization and great Lighthouse scores.",
@@ -35,13 +37,18 @@ export const projects = [
       "Keeping animations smooth across mobile devices.",
       "Structuring components for easy reuse and editing.",
     ],
-    improvements: ["Add CMS integration (MDX/Contentlayer).", "Add blog section.", "Add image optimization pipeline."],
+    improvements: [
+      "Add CMS integration (MDX/Contentlayer).",
+      "Add blog section.",
+      "Add image optimization pipeline.",
+    ],
   },
   {
     slug: "form-flow",
     title: "Form Flow",
     image: "/project-3.svg",
-    summary: "A polished contact form flow with validation and optimistic UI feedback.",
+    summary:
+      "A polished contact form flow with validation and optimistic UI feedback.",
     tags: ["UX", "Validation", "Accessibility"],
     description:
       "Form Flow focuses on a great messaging experience: clear states, helpful errors, keyboard-friendly navigation, and non-blocking feedback. It’s designed to feel fast and reliable.",
@@ -52,11 +59,14 @@ export const projects = [
       "Designing error states that don’t break layout.",
       "Ensuring accessibility across inputs and alerts.",
     ],
-    improvements: ["Add spam protection.", "Add email provider integration.", "Persist drafts locally."],
+    improvements: [
+      "Add spam protection.",
+      "Add email provider integration.",
+      "Persist drafts locally.",
+    ],
   },
 ];
 
 export function getProjectBySlug(slug) {
   return projects.find((p) => p.slug === slug);
 }
-
