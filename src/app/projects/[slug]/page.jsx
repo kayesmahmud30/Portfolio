@@ -21,9 +21,9 @@ export default async function ProjectDetailsPage({ params }) {
         <Container className="py-10">
           <Link
             href="/#projects"
-            className="text-sm font-medium text-zinc-600 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-zinc-50"
+            className="border-2 p-2 rounded-full text-sm font-medium text-zinc-600 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-zinc-50"
           >
-            ← Back to Projects
+            🡰 Back to Projects
           </Link>
 
           <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">

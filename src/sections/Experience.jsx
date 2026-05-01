@@ -14,7 +14,7 @@ export default function Experience() {
         <SectionHeading
           eyebrow="EXPERIENCE"
           title="Where I’ve worked"
-          subtitle="Internships, freelance work, and team projects—focused on building reliable UI and great user experiences."
+          subtitle="Freelance work and team projects focused on building reliable UI and great user experiences."
         />
 
         {hasExp ? (
@@ -26,8 +26,12 @@ export default function Experience() {
               >
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <div className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">{item.company}</div>
-                    <div className="mt-1 text-sm text-zinc-700 dark:text-zinc-200">{item.role}</div>
+                    <div className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">
+                      {item.company}
+                    </div>
+                    <div className="mt-1 text-sm text-zinc-700 dark:text-zinc-200">
+                      {item.role}
+                    </div>
                   </div>
                   <div className="text-xs font-semibold tracking-wide text-zinc-500 dark:text-zinc-400">
                     {item.duration}
@@ -52,4 +56,3 @@ export default function Experience() {
     </AnimatedSection>
   );
 }
-
