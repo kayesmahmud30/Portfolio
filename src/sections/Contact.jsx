@@ -46,7 +46,8 @@ export default function Contact() {
     const e = {};
     if (!next.name.trim()) e.name = "Please enter your name.";
     if (!next.email.trim()) e.email = "Please enter your email.";
-    else if (!isValidEmail(next.email.trim())) e.email = "Please enter a valid email.";
+    else if (!isValidEmail(next.email.trim()))
+      e.email = "Please enter a valid email.";
     if (!next.message.trim()) e.message = "Please write a short message.";
     return e;
   }
@@ -65,15 +66,21 @@ export default function Contact() {
         body: JSON.stringify(form),
       });
       if (!res.ok) throw new Error("Request failed");
-      setStatus({ state: "success", message: "Message sent! I’ll get back to you soon." });
+      setStatus({
+        state: "success",
+        message: "Message sent! I’ll get back to you soon.",
+      });
       setForm({ name: "", email: "", message: "" });
     } catch {
-      setStatus({ state: "error", message: "Something went wrong. Please try again." });
+      setStatus({
+        state: "error",
+        message: "Something went wrong. Please try again.",
+      });
     }
   }
 
   return (
-    <AnimatedSection id="contact" className="py-16 sm:py-20">
+    <AnimatedSection id="contact" className=" py-16 sm:py-20">
       <Container>
         <SectionHeading
           eyebrow="CONTACT"
@@ -81,9 +88,14 @@ export default function Contact() {
           subtitle="Have an idea, a question, or an opportunity? Send a message and I’ll reply as soon as I can."
         />
 
-        <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="rounded-3xl border border-black/10 bg-[var(--card)] p-6 backdrop-blur dark:border-white/10">
-            <div className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">Reach me directly</div>
+        <div className=" grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+          <div
+            data-aos="fade-left"
+            className="rounded-3xl border border-black/10 bg-[var(--card)] p-6 backdrop-blur dark:border-white/10"
+          >
+            <div className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">
+              Reach me directly
+            </div>
             <div className="mt-4 grid gap-3">
               {contactItems.map((item) => {
                 const Icon = item.icon;
@@ -101,7 +113,9 @@ export default function Contact() {
                         <div className="text-xs font-semibold tracking-wide text-zinc-500 dark:text-zinc-400">
                           {item.label}
                         </div>
-                        <div className="text-sm font-medium text-zinc-950 dark:text-zinc-50">{item.value}</div>
+                        <div className="text-sm font-medium text-zinc-950 dark:text-zinc-50">
+                          {item.value}
+                        </div>
                       </div>
                     </div>
                     <span className="text-xs text-zinc-500 transition group-hover:translate-x-0.5 dark:text-zinc-400">
@@ -114,10 +128,13 @@ export default function Contact() {
           </div>
 
           <form
+            data-aos="fade-right"
             onSubmit={onSubmit}
             className="rounded-3xl border border-black/10 bg-[var(--card)] p-6 backdrop-blur dark:border-white/10"
           >
-            <div className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">Send a message</div>
+            <div className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">
+              Send a message
+            </div>
 
             <div className="mt-5 grid gap-4">
               <Field
@@ -175,15 +192,27 @@ export default function Contact() {
   );
 }
 
-function Field({ label, value, onChange, error, placeholder, multiline, inputMode }) {
+function Field({
+  label,
+  value,
+  onChange,
+  error,
+  placeholder,
+  multiline,
+  inputMode,
+}) {
   const base =
     "mt-2 w-full rounded-2xl border bg-white/40 px-4 py-3 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-500 focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 dark:bg-zinc-900/30 dark:text-zinc-50 dark:placeholder:text-zinc-400";
 
-  const border = error ? "border-rose-500/35" : "border-black/10 dark:border-white/10";
+  const border = error
+    ? "border-rose-500/35"
+    : "border-black/10 dark:border-white/10";
 
   return (
     <label className="block">
-      <span className="text-xs font-semibold tracking-wide text-zinc-600 dark:text-zinc-300">{label}</span>
+      <span className="text-xs font-semibold tracking-wide text-zinc-600 dark:text-zinc-300">
+        {label}
+      </span>
       {multiline ? (
         <textarea
           value={value}
@@ -202,9 +231,10 @@ function Field({ label, value, onChange, error, placeholder, multiline, inputMod
         />
       )}
       {error ? (
-        <div className="mt-2 text-xs font-medium text-rose-600 dark:text-rose-300">{error}</div>
+        <div className="mt-2 text-xs font-medium text-rose-600 dark:text-rose-300">
+          {error}
+        </div>
       ) : null}
     </label>
   );
 }
-

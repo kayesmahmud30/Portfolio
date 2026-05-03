@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 export default function ProjectCard({ project }) {
   return (
     <motion.div
+      data-aos="flip-left"
       whileHover={{ y: -6 }}
       transition={{ type: "spring", stiffness: 320, damping: 22 }}
       className="group rounded-3xl border border-black/10 bg-[var(--card)] shadow-sm backdrop-blur transition hover:border-black/15 dark:border-white/10 dark:hover:border-white/15"
@@ -28,7 +29,9 @@ export default function ProjectCard({ project }) {
             {project.title}
           </h3>
         </div>
-        <p className="mt-2 text-sm leading-7 text-zinc-600 dark:text-zinc-300">{project.summary}</p>
+        <p className="mt-2 text-sm leading-7 text-zinc-600 dark:text-zinc-300">
+          {project.summary}
+        </p>
 
         <div className="mt-4 flex flex-wrap gap-2">
           {project.tags?.map((t) => (
@@ -53,4 +56,3 @@ export default function ProjectCard({ project }) {
     </motion.div>
   );
 }
-
