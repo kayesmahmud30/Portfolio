@@ -7,6 +7,8 @@ import SocialLinks from "@/components/SocialLinks";
 import { useTypewriter } from "@/components/hooks/useTypewriter";
 import { site } from "@/data/site";
 import { FiDownload } from "react-icons/fi";
+import { FaReact, FaNodeJs, FaGitAlt, FaGithub } from "react-icons/fa";
+import { SiNextdotjs, SiMongodb, SiExpress, SiJavascript } from "react-icons/si";
 
 export default function Hero() {
   const { text } = useTypewriter(site.designationLoop, {
@@ -69,14 +71,38 @@ export default function Hero() {
           >
             <div className="relative rounded-3xl border border-black/10 bg-[var(--card)] p-3 shadow-[0_30px_80px_-50px_rgba(0,0,0,0.35)] backdrop-blur dark:border-white/10">
               <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/30 via-white/5 to-transparent dark:from-white/10" />
-              <div className="relative overflow-hidden px-7 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-gray-700">
+              <div className="relative overflow-hidden px-7 rounded-2xl bg-[linear-gradient(to_right,rgba(2,0,36,0.4)_0%,rgba(9,9,121,0.4)_35%,rgba(0,212,255,0.4)_100%)] dark:bg-[linear-gradient(to_right,rgba(2,0,36,0.3)_0%,rgba(9,9,121,0.3)_35%,rgba(0,212,255,0.3)_100%)] animate-gradient-bg bg-[length:200%_200%] border-2 border-gray-700/50 backdrop-blur-md transition-colors duration-500">
+                <div className="absolute inset-0 pointer-events-none">
+                  {[
+                    { Icon: FaReact, color: "text-blue-500", top: "10%", left: "10%", delay: "0s" },
+                    { Icon: SiNextdotjs, color: "text-black", top: "55%", left: "88%", delay: "1s" },
+                    { Icon: SiMongodb, color: "text-green-500", top: "15%", left: "80%", delay: "0.5s" },
+                    { Icon: FaNodeJs, color: "text-green-600", top: "55%", left: "2%", delay: "1.5s" },
+                    { Icon: SiJavascript, color: "text-yellow-500", top: "30%", left: "3%", delay: "2s" },
+                    { Icon: SiExpress, color: "text-black", top: "35%", left: "88%", delay: "2.5s" },
+                    { Icon: FaGitAlt, color: "text-[#F1502F]", top: "22%", left: "25%", delay: "0.8s" },
+                    { Icon: FaGithub, color: "text-black", top: "25%", left: "65%", delay: "1.8s" },
+                  ].map((item, index) => (
+                    <div
+                      key={index}
+                      className={`absolute ${item.color} animate-float`}
+                      style={{ 
+                        top: item.top, 
+                        left: item.left,
+                        animationDelay: item.delay
+                      }}
+                    >
+                      <item.Icon className="text-3xl sm:text-4xl logo-shadow" />
+                    </div>
+                  ))}
+                </div>
                 <Image
                   src="/profile.jpg"
                   alt={`${site.name} profile photo`}
                   width={700}
                   height={700}
                   priority
-                  className="h-90 border-white w-full object-cover sm:h-105"
+                  className="relative z-10 h-90 border-white w-full object-cover sm:h-105"
                 />
               </div>
             </div>
