@@ -20,7 +20,6 @@ export default function Education() {
 
           {education.map((item, idx) => (
             <div
-              data-aos="flip-left"
               key={`${item.institution}-${idx}`}
               className="relative rounded-2xl border border-black/10 bg-[var(--card)] p-6 backdrop-blur transition hover:-translate-y-0.5 hover:border-black/15 dark:border-white/10 dark:hover:border-white/15 sm:pl-12"
             >

@@ -51,10 +51,3 @@ body {
 .section {
   scroll-margin-top: 96px;
 }
-
-body {
-  overflow-x: hidden;
-}
-body * {
-  overflow-x: hidden;
-}

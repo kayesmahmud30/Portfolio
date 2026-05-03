@@ -4,11 +4,7 @@ import { motion } from "framer-motion";
 
 export default function SkillBar({ icon: Icon, name, level }) {
   return (
-    <div
-      data-aos="zoom-in-up"
-      data-aos-anchor-placement="bottom-bottom"
-      className="group rounded-2xl border border-black/10 bg-[var(--card)] p-4 backdrop-blur transition hover:-translate-y-0.5 hover:border-black/15 dark:border-white/10 dark:hover:border-white/15"
-    >
+    <div className="group rounded-2xl border border-black/10 bg-[var(--card)] p-4 backdrop-blur transition hover:-translate-y-0.5 hover:border-black/15 dark:border-white/10 dark:hover:border-white/15">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-zinc-950/5 text-zinc-900 dark:bg-white/10 dark:text-zinc-50">

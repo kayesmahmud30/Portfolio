@@ -89,10 +89,7 @@ export default function Contact() {
         />
 
         <div className=" grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-          <div
-            data-aos="fade-left"
-            className="rounded-3xl border border-black/10 bg-[var(--card)] p-6 backdrop-blur dark:border-white/10"
-          >
+          <div className="rounded-3xl border border-black/10 bg-[var(--card)] p-6 backdrop-blur dark:border-white/10">
             <div className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">
               Reach me directly
             </div>
@@ -128,7 +125,6 @@ export default function Contact() {
           </div>
 
           <form
-            data-aos="fade-right"
             onSubmit={onSubmit}
             className="rounded-3xl border border-black/10 bg-[var(--card)] p-6 backdrop-blur dark:border-white/10"
           >

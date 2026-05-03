@@ -15,10 +15,7 @@ export default function About() {
         />
 
         <div className="grid gap-6 text-zinc-700 dark:text-zinc-200 md:grid-cols-2">
-          <div
-            data-aos="fade-left"
-            className="rounded-2xl border border-black/10 bg-[var(--card)] p-6 backdrop-blur dark:border-white/10"
-          >
+          <div className="rounded-2xl border border-black/10 bg-[var(--card)] p-6 backdrop-blur dark:border-white/10">
             <h3 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">
               My journey
             </h3>
@@ -36,10 +33,7 @@ export default function About() {
             </p>
           </div>
 
-          <div
-            data-aos="fade-right"
-            className="rounded-2xl border border-black/10 bg-[var(--card)] p-6 backdrop-blur dark:border-white/10"
-          >
+          <div className="rounded-2xl border border-black/10 bg-[var(--card)] p-6 backdrop-blur dark:border-white/10">
             <h3 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">
               What I love working on
             </h3>

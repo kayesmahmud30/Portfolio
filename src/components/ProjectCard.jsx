@@ -7,7 +7,6 @@ import { motion } from "framer-motion";
 export default function ProjectCard({ project }) {
   return (
     <motion.div
-      data-aos="flip-left"
       whileHover={{ y: -6 }}
       transition={{ type: "spring", stiffness: 320, damping: 22 }}
       className="group rounded-3xl border border-black/10 bg-[var(--card)] shadow-sm backdrop-blur transition hover:border-black/15 dark:border-white/10 dark:hover:border-white/15"
