@@ -49,7 +49,7 @@ export default function Hero() {
 
             <div className=" mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
               <a
-                data-aos="fade-down-right"
+                data-aos="zoom-in"
                 href="/resume.pdf"
                 download
                 className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-zinc-900 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100 sm:w-auto"
