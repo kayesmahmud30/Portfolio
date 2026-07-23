@@ -1,12 +1,27 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import AnimatedSection from "@/components/AnimatedSection";
 import Container from "@/components/Container";
 import SectionHeading from "@/components/SectionHeading";
-import { experience } from "@/data/experience";
+import { experience as staticExperience } from "@/data/experience";
+import type { ExperienceItem } from "@/types";
 
 export default function Experience() {
-  const hasExp = Array.isArray(experience) && experience.length > 0;
+  const [items, setItems] = useState<ExperienceItem[]>(staticExperience);
+
+  useEffect(() => {
+    fetch("/api/admin/experience")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.ok && Array.isArray(data.data) && data.data.length > 0) {
+          setItems(data.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const hasExp = Array.isArray(items) && items.length > 0;
 
   return (
     <AnimatedSection id="experience" className="py-16 sm:py-20">
@@ -19,7 +34,7 @@ export default function Experience() {
 
         {hasExp ? (
           <div className="grid gap-4">
-            {experience.map((item) => (
+            {items.map((item) => (
               <div
                 key={`${item.company}-${item.role}`}
                 className="rounded-2xl border border-black/10 bg-[var(--card)] p-6 backdrop-blur transition hover:-translate-y-0.5 hover:border-black/15 dark:border-white/10 dark:hover:border-white/15"

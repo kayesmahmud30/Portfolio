@@ -1,6 +1,6 @@
 ---
 name: portfolio-guide
-description: Architecture guide, TypeScript types, layout standards, and modification procedures for the Kayes Mahmud Portfolio codebase.
+description: Architecture guide, TypeScript types, layout standards, Better Auth authentication, MongoDB schemas, Cloudinary upload workflows, and modification procedures for the Kayes Mahmud Portfolio codebase.
 ---
 
 # Portfolio Architecture & Development Guide
@@ -13,6 +13,10 @@ This guide provides a comprehensive analysis of the Portfolio project structure,
 
 - **Framework**: Next.js (App Router, React 19)
 - **Language**: TypeScript (`strict: true`, fully typed components, pages, routes, data, and hooks)
+- **Database**: MongoDB & Mongoose (`src/lib/db.ts` & `src/models/*`)
+- **Authentication**: Better Auth (`src/lib/auth.ts`, `src/lib/auth-client.ts`, `/api/auth/[...all]`)
+- **Image Hosting**: Cloudinary (`src/lib/cloudinary.ts` & `/api/upload`)
+- **Admin Dashboard**: Hidden portal at `/admin-portal` with login at `/admin-portal/login`
 - **Styling**: Tailwind CSS v4 + Vanilla CSS (`src/styles/utilities.css`, `src/app/globals.css`)
 - **Animation**: Framer Motion (`AnimatePresence`, `motion`, `useScroll`, `useSpring`, `useInView`)
 - **Icons**: React Icons (`react-icons/si`, `react-icons/fi`, `react-icons/fa`)
@@ -28,77 +32,65 @@ Portfolio/
 │   └── skills/
 │       └── portfolio-guide/
 │           └── SKILL.md                 # Agent Skill & Architecture Guide
-├── public/                              # Static images (profile.jpg, project-*.jpg, resume.pdf)
+├── .env.example                         # Demo environment variable template
+├── public/                              # Static fallback images (profile.jpg, project-*.jpg, resume.pdf)
 ├── src/
 │   ├── app/                             # Next.js App Router routes
-│   │   ├── api/contact/route.ts        # POST contact endpoint
+│   │   ├── admin-portal/                # Hidden Admin Dashboard
+│   │   │   ├── login/page.tsx           # Hidden Sign-in route
+│   │   │   └── page.tsx                 # Protected Admin Management Dashboard
+│   │   ├── api/
+│   │   │   ├── admin/                   # Admin CRUD APIs (site, projects, skills, ed/exp)
+│   │   │   ├── auth/[...all]/route.ts   # Better Auth API route handler
+│   │   │   ├── contact/route.ts         # Contact form POST endpoint
+│   │   │   └── upload/route.ts          # Cloudinary image upload endpoint
 │   │   ├── projects/[slug]/page.tsx     # Dynamic project details page
-│   │   ├── globals.css                  # Global Tailwind styles & font variables
 │   │   ├── layout.tsx                   # Root HTML/Font/Provider layout
-│   │   ├── not-found.tsx                # Custom 404 page
 │   │   ├── page.tsx                     # Main single-page portfolio view
-│   │   └── template.tsx                 # Route transition wrapper (framer-motion)
-│   ├── components/                      # Reusable UI components
-│   │   ├── hooks/
-│   │   │   ├── useActiveSection.ts      # Active navbar section tracker hook
-│   │   │   └── useTypewriter.ts         # Typing text animation hook
-│   │   ├── AnimatedSection.tsx          # Scroll-triggered section animation container
-│   │   ├── Container.tsx                # Standard max-width layout wrapper
-│   │   ├── Footer.tsx                   # Site footer with social links & copyright
-│   │   ├── Navbar.tsx                   # Fixed top navigation bar with mobile drawer
-│   │   ├── ProjectCard.tsx              # Card component for individual projects
-│   │   ├── Providers.tsx                # ThemeProvider & MotionConfig wrapper
-│   │   ├── ScrollProgress.tsx           # Top-aligned scroll indicator bar
-│   │   ├── SectionHeading.tsx           # Standardized section header (Eyebrow, Title, Subtitle)
-│   │   ├── SkillBar.tsx                 # Individual skill item with animated percentage bar
-│   │   ├── SocialLinks.tsx              # Icon row for GitHub, LinkedIn, Twitter, Facebook
-│   │   └── ThemeToggle.tsx              # Hydration-safe dark/light mode toggle button
-│   ├── data/                            # Type-safe content data modules
-│   │   ├── education.ts                 # Educational background data
-│   │   ├── experience.ts                # Work & internship experience data
-│   │   ├── projects.ts                  # Project showcase array & slug lookup helper
-│   │   ├── site.ts                      # Personal metadata, intro & nav links
-│   │   └── skills.ts                    # Grouped technical skills & icon mappings
-│   ├── styles/
-│   │   └── utilities.css                # CSS keyframes & custom layout classes
-│   └── types/
-│       └── index.ts                     # Centralized TypeScript definitions
-├── next.config.mjs
-├── package.json
-└── tsconfig.json
+│   │   └── template.tsx                 # Route transition wrapper
+│   ├── components/                      # UI components
+│   │   ├── admin/
+│   │   │   ├── ImageUploader.tsx        # Cloudinary drag-and-drop uploader with live preview
+│   │   │   └── ProjectModal.tsx         # Add/Edit project modal dialog
+│   │   ├── hooks/                       # Custom hooks
+│   │   └── ...                          # Reusable public components
+│   ├── lib/                             # Utility & service integrations
+│   │   ├── auth.ts                      # Better Auth server configuration
+│   │   ├── auth-client.ts               # Better Auth React client hooks
+│   │   ├── db.ts                        # Mongoose MongoDB connection helper with static fallback
+│   │   └── cloudinary.ts                # Cloudinary image upload helper
+│   ├── models/                          # Mongoose database models
+│   │   ├── Education.ts
+│   │   ├── Experience.ts
+│   │   ├── Project.ts
+│   │   ├── SiteConfig.ts
+│   │   └── SkillGroup.ts
+│   ├── data/                            # Static fallback content modules
+│   └── types/                           # Centralized TypeScript interfaces
 ```
 
 ---
 
-## 3. Data & Type Models (`src/types/index.ts`)
+## 3. Environment Variables (`.env.local`)
 
-When adding or modifying content, use the central types:
-
-- **`SiteConfig`**: Controls portfolio header text, bio, contact email, phone, and social URLs (`src/data/site.ts`).
-- **`Project`**: Defines project slug, title, image path, tags, description, live URL, GitHub URL, challenges, and improvements (`src/data/projects.ts`).
-- **`SkillGroup` / `Skill`**: Group title and skills array with React Icon component and proficiency percentage (`src/data/skills.ts`).
-- **`EducationItem`**: Institution name, degree, year range, and detailed description (`src/data/education.ts`).
-- **`ExperienceItem`**: Company name, role title, duration string, and optional responsibility bullets (`src/data/experience.ts`).
+```env
+MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/portfolio?retryWrites=true&w=majority
+BETTER_AUTH_SECRET=32_character_secret_key_here
+BETTER_AUTH_URL=http://localhost:3000
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+```
 
 ---
 
-## 4. Workflows for Common Tasks
+## 4. Admin Dashboard Features
 
-### Task A: Adding a New Project
-1. Open `src/data/projects.ts`.
-2. Add a new object conforming to the `Project` interface.
-3. Place project preview images in `public/` (e.g. `/project-4.jpg`).
-4. Run `npx tsc --noEmit` and `npm run build` to verify slug generation.
-
-### Task B: Adding a New Section to the Homepage
-1. Create `src/sections/YourSection.tsx` wrapping content inside `<AnimatedSection id="your-section">` and `<Container>`.
-2. Add navigation link `{ id: "your-section", label: "Your Section" }` to `navLinks` in `src/data/site.ts`.
-3. Import and place `<YourSection />` inside `<main>` in `src/app/page.tsx`.
-
-### Task C: Modifying Contact API / Integrations
-1. Edit `src/app/api/contact/route.ts`.
-2. Handle request payload using typed `NextRequest`.
-3. Return response using `NextResponse.json()`.
+- **Hidden Sign-in**: Admin manually navigates to `/admin-portal/login` (not listed in header or footer links).
+- **Projects Manager**: Create, Edit, List, and Delete portfolio projects.
+- **Profile & Banner Editor**: Edit personal bio, designation loop, contact details, and upload Profile & Banner background images via Cloudinary.
+- **Skill Sets Manager**: Adjust skill categories, skill names, and proficiency percentages.
+- **Static Fallback**: If MongoDB credentials are unconfigured or offline, public site automatically falls back to static data files (`src/data/*`).
 
 ---
 

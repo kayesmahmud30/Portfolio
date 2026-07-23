@@ -60,6 +60,7 @@ export default async function ProjectDetailsPage({ params }: PageProps) {
             alt={project.title}
             width={1400}
             height={800}
+            unoptimized={project.image.startsWith("data:")}
             className="h-[320px] w-full object-cover sm:h-[420px]"
             priority
           />

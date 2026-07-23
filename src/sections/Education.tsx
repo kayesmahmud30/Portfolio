@@ -1,11 +1,26 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import AnimatedSection from "@/components/AnimatedSection";
 import Container from "@/components/Container";
 import SectionHeading from "@/components/SectionHeading";
-import { education } from "@/data/education";
+import { education as staticEducation } from "@/data/education";
+import type { EducationItem } from "@/types";
 
 export default function Education() {
+  const [items, setItems] = useState<EducationItem[]>(staticEducation);
+
+  useEffect(() => {
+    fetch("/api/admin/education")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.ok && Array.isArray(data.data) && data.data.length > 0) {
+          setItems(data.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <AnimatedSection id="education" className="py-16 sm:py-20">
       <Container>
@@ -18,7 +33,7 @@ export default function Education() {
         <div className="relative grid gap-4">
           <div className="absolute left-4 top-0 hidden h-full w-px bg-black/10 dark:bg-white/10 sm:block" />
 
-          {education.map((item, idx) => (
+          {items.map((item, idx) => (
             <div
               key={`${item.institution}-${idx}`}
               className="relative rounded-2xl border border-black/10 bg-[var(--card)] p-6 backdrop-blur transition hover:-translate-y-0.5 hover:border-black/15 dark:border-white/10 dark:hover:border-white/15 sm:pl-12"

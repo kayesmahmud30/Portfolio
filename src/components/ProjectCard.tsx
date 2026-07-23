@@ -24,6 +24,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           alt={`${project.title} preview`}
           width={1200}
           height={700}
+          unoptimized={project.image.startsWith("data:")}
           className="h-48 w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] sm:h-52"
         />
       </div>

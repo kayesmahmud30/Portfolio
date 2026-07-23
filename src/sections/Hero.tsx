@@ -1,24 +1,49 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import Container from "@/components/Container";
 import SocialLinks from "@/components/SocialLinks";
 import { useTypewriter } from "@/components/hooks/useTypewriter";
-import { site } from "@/data/site";
+import { site as staticSite } from "@/data/site";
+import type { SiteConfig } from "@/types";
 import { FiDownload } from "react-icons/fi";
 import { FaReact, FaNodeJs, FaGitAlt, FaGithub } from "react-icons/fa";
 import { SiNextdotjs, SiMongodb, SiExpress, SiJavascript } from "react-icons/si";
 
 export default function Hero() {
-  const { text } = useTypewriter(site.designationLoop, {
+  const [siteData, setSiteData] = useState<Partial<SiteConfig & { profileImage?: string; bannerImage?: string }>>(staticSite);
+
+  useEffect(() => {
+    fetch("/api/admin/site")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.ok && data.data) {
+          setSiteData(data.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const designations = siteData.designationLoop || staticSite.designationLoop;
+  const { text } = useTypewriter(designations, {
     typingMs: 55,
     deletingMs: 32,
     pauseMs: 900,
   });
 
+  const profileImageSrc = siteData.profileImage || "/profile.jpg";
+
   return (
     <div className="relative overflow-hidden">
+      {/* Dynamic Banner Background if set */}
+      {siteData.bannerImage ? (
+        <div className="absolute inset-0 z-0 opacity-15">
+          <Image src={siteData.bannerImage} alt="Banner background" fill className="object-cover" />
+        </div>
+      ) : null}
+
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-32 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-indigo-500/15 blur-3xl" />
         <div className="absolute -bottom-40 right-[-80px] h-[420px] w-[420px] rounded-full bg-emerald-400/10 blur-3xl" />
@@ -35,18 +60,18 @@ export default function Hero() {
               HELLO, I’M
             </p>
             <h1 className="mt-3 text-4xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50 sm:text-5xl">
-              {site.name}
+              {siteData.name || staticSite.name}
             </h1>
 
             <div className="mt-4 flex items-center gap-2 text-lg text-zinc-700 dark:text-zinc-200 sm:text-xl">
               <span className="rounded-full border border-black/10 bg-white/50 px-3 py-1 text-sm font-medium backdrop-blur dark:border-white/10 dark:bg-zinc-900/30">
-                {text || site.designationLoop?.[0]}
+                {text || designations[0]}
                 <span className="ml-1 inline-block h-5 w-[2px] translate-y-[3px] bg-zinc-950/60 align-middle dark:bg-white/60 animate-pulse" />
               </span>
             </div>
 
             <p className="mt-6 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300 sm:text-lg sm:leading-8">
-              {site.intro}
+              {siteData.intro || staticSite.intro}
             </p>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -59,7 +84,7 @@ export default function Hero() {
                 Download Resume
               </a>
 
-              <SocialLinks links={site.socials} />
+              <SocialLinks links={siteData.socials || staticSite.socials} />
             </div>
           </motion.div>
 
@@ -97,11 +122,12 @@ export default function Hero() {
                   ))}
                 </div>
                 <Image
-                  src="/profile.jpg"
-                  alt={`${site.name} profile photo`}
+                  src={profileImageSrc}
+                  alt={`${siteData.name || staticSite.name} profile photo`}
                   width={700}
                   height={700}
                   priority
+                  unoptimized={profileImageSrc.startsWith("data:")}
                   className="relative z-10 h-90 border-white w-full object-cover sm:h-105"
                 />
               </div>
