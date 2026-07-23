@@ -1,21 +1,25 @@
-## Developer Portfolio (Next.js + Tailwind + Framer Motion)
+## Developer Portfolio (Next.js + TypeScript + Tailwind + Framer Motion)
 
 Modern, clean, animated developer portfolio built with:
 
-- **Next.js (App Router)**
-- **React**
-- **Tailwind CSS**
+- **Next.js (App Router, React 19)**
+- **TypeScript** (Strict mode)
+- **Tailwind CSS** (v4)
 - **Framer Motion**
 - **React Icons**
+- **Next-Themes** (Dark/Light mode)
 
-### Project structure
+### Project Structure
 
-- `src/app/`: routes (home + dynamic project details)
-- `src/components/`: reusable UI components (navbar, footer, etc.)
-- `src/sections/`: page sections (Hero/About/Skills/…)
-- `src/data/`: content/data objects (projects, skills, etc.)
-- `src/styles/`: small CSS utilities
-- `public/`: images, `resume.pdf`, assets
+- `src/app/`: Next.js App Router routes (Home, dynamic `/projects/[slug]`, `/api/contact`)
+- `src/components/`: Reusable TSX UI components (Navbar, Footer, ProjectCard, ThemeToggle, etc.)
+- `src/components/hooks/`: Typed custom hooks (`useActiveSection`, `useTypewriter`)
+- `src/sections/`: Page sections (Hero, About, Skills, Education, Experience, Projects, Contact)
+- `src/data/`: Type-safe content data modules (`site.ts`, `projects.ts`, `skills.ts`, `education.ts`, `experience.ts`)
+- `src/types/`: Centralized TypeScript interface definitions (`index.ts`)
+- `src/styles/`: Small CSS utilities & animation keyframes
+- `public/`: Static image assets, profile photos, and resume PDF
+- `.agents/skills/portfolio-guide/SKILL.md`: Architecture guide for AI agents working on this project
 
 ## Getting Started
 
@@ -27,40 +31,31 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-Edit your content here:
+### Type Checking & Linting
 
-- `src/data/site.js` (name, intro, social links, contact info)
-- `src/data/projects.js` (projects + detail page content)
-- `src/data/skills.js`, `src/data/education.js`, `src/data/experience.js`
+```bash
+npx tsc --noEmit   # Run TypeScript compiler check
+npm run lint       # Run ESLint check
+npm run build      # Build production bundle
+```
+
+### Editing Content
+
+Edit content in `src/data/`:
+
+- `src/data/site.ts` (Name, intro, social links, contact info)
+- `src/data/projects.ts` (Projects list + detail page content)
+- `src/data/skills.ts`, `src/data/education.ts`, `src/data/experience.ts`
 
 Replace images in `public/`:
 
-- `public/profile-placeholder.svg` → replace with `profile.jpg` (or keep SVG)
-- `public/project-*.svg` → replace with real project screenshots
-- `public/resume.pdf` → add your resume file (the button still works as a placeholder if missing)
+- `public/profile.jpg` → replace with your profile photo
+- `public/project-*.jpg` → replace with real project screenshots
+- `public/resume.pdf` → add your resume file
 
-### Deployment (Vercel) — step by step
+### Deployment (Vercel)
 
-1. **Push to GitHub**
-   - Create a new repo on GitHub
-   - Commit and push this project
-
-2. **Import on Vercel**
-   - Go to Vercel → “Add New…” → “Project”
-   - Import your GitHub repository
-
-3. **Configure build settings**
-   - Framework Preset: **Next.js**
-   - Build Command: `npm run build`
-   - Output: (leave default)
-   - Install Command: `npm install`
-
-4. **Deploy**
-   - Click **Deploy**
-
-5. **Optional: custom domain**
-   - Project → Settings → Domains → add your domain and follow DNS steps
-
-### Notes
-
-- The contact form posts to a **placeholder API route** at `src/app/api/contact/route.js`. Connect it to an email provider later if you want real delivery.
+1. Push to GitHub
+2. Import project on Vercel
+3. Build Command: `npm run build`
+4. Deploy!
