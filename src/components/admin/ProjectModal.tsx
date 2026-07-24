@@ -22,9 +22,11 @@ export default function ProjectModal({ isOpen, onClose, onSave, project }: Proje
     description: "",
     liveUrl: "",
     githubClientUrl: "",
+    githubServerUrl: "",
     challenges: [],
     improvements: [],
   });
+  const [hasServerRepo, setHasServerRepo] = useState(false);
   const [tagInput, setTagInput] = useState("");
   const [challengeInput, setChallengeInput] = useState("");
   const [improvementInput, setImprovementInput] = useState("");
@@ -35,6 +37,7 @@ export default function ProjectModal({ isOpen, onClose, onSave, project }: Proje
     const timer = setTimeout(() => {
       if (project) {
         setForm(project);
+        setHasServerRepo(Boolean(project.githubServerUrl && project.githubServerUrl.trim().length > 0));
         setTagInput(project.tags?.join(", ") || "");
         setChallengeInput(project.challenges?.join("\n") || "");
         setImprovementInput(project.improvements?.join("\n") || "");
@@ -48,9 +51,11 @@ export default function ProjectModal({ isOpen, onClose, onSave, project }: Proje
           description: "",
           liveUrl: "",
           githubClientUrl: "",
+          githubServerUrl: "",
           challenges: [],
           improvements: [],
         });
+        setHasServerRepo(false);
         setTagInput("");
         setChallengeInput("");
         setImprovementInput("");
@@ -73,9 +78,13 @@ export default function ProjectModal({ isOpen, onClose, onSave, project }: Proje
       const generatedSlug =
         form.slug?.trim() || form.title?.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "new-project";
 
+      const finalServerUrl = hasServerRepo ? (form.githubServerUrl || "").trim() : "";
+
       await onSave({
         ...form,
         slug: generatedSlug,
+        githubClientUrl: (form.githubClientUrl || "").trim(),
+        githubServerUrl: finalServerUrl,
         tags,
         challenges,
         improvements,
@@ -109,19 +118,15 @@ export default function ProjectModal({ isOpen, onClose, onSave, project }: Proje
               type="text"
               required
               value={form.title || ""}
-              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+              onChange={(e) => {
+                const newTitle = e.target.value;
+                setForm((f) => ({
+                  ...f,
+                  title: newTitle,
+                  ...(!project ? { slug: newTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") } : {}),
+                }));
+              }}
               placeholder="e.g. English Janala Vocabulary"
-              className="mt-1.5 w-full rounded-2xl border border-black/10 bg-white/40 px-4 py-3 text-sm outline-none dark:border-white/10 dark:bg-zinc-900/30"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-300">Slug (URL)</label>
-            <input
-              type="text"
-              value={form.slug || ""}
-              onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
-              placeholder="auto-generated-from-title"
               className="mt-1.5 w-full rounded-2xl border border-black/10 bg-white/40 px-4 py-3 text-sm outline-none dark:border-white/10 dark:bg-zinc-900/30"
             />
           </div>
@@ -167,6 +172,33 @@ export default function ProjectModal({ isOpen, onClose, onSave, project }: Proje
             />
           </div>
 
+          {/* Toggle for Separate Server Repository */}
+          <div className="flex items-center justify-between rounded-2xl border border-black/10 bg-white/40 px-4 py-3 dark:border-white/10 dark:bg-zinc-900/30">
+            <div>
+              <span className="block text-xs font-semibold text-zinc-700 dark:text-zinc-200">
+                Separate Server (Backend) Repository?
+              </span>
+              <span className="block text-[11px] text-zinc-500 dark:text-zinc-400">
+                Turn on if project has separate frontend and backend GitHub repos.
+              </span>
+            </div>
+            <label className="relative inline-flex cursor-pointer items-center">
+              <input
+                type="checkbox"
+                checked={hasServerRepo}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setHasServerRepo(checked);
+                  if (!checked) {
+                    setForm((f) => ({ ...f, githubServerUrl: "" }));
+                  }
+                }}
+                className="peer sr-only"
+              />
+              <div className="peer h-6 w-11 rounded-full bg-zinc-300 transition-colors after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-indigo-600 peer-checked:after:translate-x-full dark:bg-zinc-700" />
+            </label>
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-300">Live Demo URL</label>
@@ -179,16 +211,33 @@ export default function ProjectModal({ isOpen, onClose, onSave, project }: Proje
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-300">GitHub Repository URL</label>
+              <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-300">
+                {hasServerRepo ? "Github Repository (Client)" : "GitHub Repository URL"}
+              </label>
               <input
                 type="url"
                 value={form.githubClientUrl || ""}
                 onChange={(e) => setForm((f) => ({ ...f, githubClientUrl: e.target.value }))}
-                placeholder="https://github.com/username/repo"
+                placeholder="https://github.com/username/client-repo"
                 className="mt-1.5 w-full rounded-2xl border border-black/10 bg-white/40 px-4 py-3 text-sm outline-none dark:border-white/10 dark:bg-zinc-900/30"
               />
             </div>
           </div>
+
+          {hasServerRepo ? (
+            <div>
+              <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-300">
+                Github Repository (Server)
+              </label>
+              <input
+                type="url"
+                value={form.githubServerUrl || ""}
+                onChange={(e) => setForm((f) => ({ ...f, githubServerUrl: e.target.value }))}
+                placeholder="https://github.com/username/server-repo"
+                className="mt-1.5 w-full rounded-2xl border border-black/10 bg-white/40 px-4 py-3 text-sm outline-none dark:border-white/10 dark:bg-zinc-900/30"
+              />
+            </div>
+          ) : null}
 
           <div>
             <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-300">Challenges (one per line)</label>

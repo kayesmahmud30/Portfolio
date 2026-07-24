@@ -2,7 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Container from "@/components/Container";
-import { getProjectBySlug, projects } from "@/data/projects";
+import { connectDB } from "@/lib/db";
+import { ProjectModel } from "@/models/Project";
+import { getProjectBySlug, projects as staticProjects } from "@/data/projects";
+import type { Project } from "@/types";
+
+export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{
@@ -10,14 +15,39 @@ interface PageProps {
   }>;
 }
 
-export function generateStaticParams() {
-  return projects.map((p) => ({ slug: p.slug }));
+export async function generateStaticParams() {
+  try {
+    const db = await connectDB();
+    if (db) {
+      const dbProjects = await ProjectModel.find({}, "slug").lean();
+      if (dbProjects && dbProjects.length > 0) {
+        return dbProjects.map((p) => ({ slug: (p as { slug: string }).slug }));
+      }
+    }
+  } catch {}
+  return staticProjects.map((p) => ({ slug: p.slug }));
+}
+
+async function fetchProject(slug: string): Promise<Project | null> {
+  try {
+    const db = await connectDB();
+    if (db) {
+      const dbProject = await ProjectModel.findOne({ slug }).lean();
+      if (dbProject) {
+        return dbProject as unknown as Project;
+      }
+    }
+  } catch (err) {
+    console.error("fetchProject error:", err);
+  }
+
+  const staticProj = getProjectBySlug(slug);
+  return staticProj || null;
 }
 
 export default async function ProjectDetailsPage({ params }: PageProps) {
   const { slug } = await params;
-
-  const project = getProjectBySlug(slug);
+  const project = await fetchProject(slug);
 
   if (!project) return notFound();
 
@@ -60,7 +90,7 @@ export default async function ProjectDetailsPage({ params }: PageProps) {
             alt={project.title}
             width={1400}
             height={800}
-            unoptimized={project.image.startsWith("data:")}
+            unoptimized={project.image?.startsWith?.("data:")}
             className="h-[320px] w-full object-cover sm:h-[420px]"
             priority
           />
@@ -97,23 +127,40 @@ export default async function ProjectDetailsPage({ params }: PageProps) {
             <h2 className="text-lg font-semibold">Links</h2>
 
             <div className="mt-4 grid gap-3">
-              <a
-                href={project.liveUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-2xl border border-black/10 bg-white/40 px-4 py-4 text-sm font-medium text-zinc-950 transition hover:-translate-y-0.5 hover:bg-white/60 dark:border-white/10 dark:bg-zinc-900/30 dark:text-zinc-50 dark:hover:bg-zinc-900/45"
-              >
-                Live project →
-              </a>
+              {project.liveUrl ? (
+                <a
+                  href={project.liveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-2xl border border-black/10 bg-white/40 px-4 py-4 text-sm font-medium text-zinc-950 transition hover:-translate-y-0.5 hover:bg-white/60 dark:border-white/10 dark:bg-zinc-900/30 dark:text-zinc-50 dark:hover:bg-zinc-900/45"
+                >
+                  Live project →
+                </a>
+              ) : null}
 
-              <a
-                href={project.githubClientUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-2xl border border-black/10 bg-white/40 px-4 py-4 text-sm font-medium text-zinc-950 transition hover:-translate-y-0.5 hover:bg-white/60 dark:border-white/10 dark:bg-zinc-900/30 dark:text-zinc-50 dark:hover:bg-zinc-900/45"
-              >
-                GitHub (client) →
-              </a>
+              {project.githubClientUrl ? (
+                <a
+                  href={project.githubClientUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-2xl border border-black/10 bg-white/40 px-4 py-4 text-sm font-medium text-zinc-950 transition hover:-translate-y-0.5 hover:bg-white/60 dark:border-white/10 dark:bg-zinc-900/30 dark:text-zinc-50 dark:hover:bg-zinc-900/45"
+                >
+                  {project.githubServerUrl && project.githubServerUrl.trim().length > 0
+                    ? "GitHub (client) →"
+                    : "GitHub →"}
+                </a>
+              ) : null}
+
+              {project.githubServerUrl && project.githubServerUrl.trim().length > 0 ? (
+                <a
+                  href={project.githubServerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-2xl border border-black/10 bg-white/40 px-4 py-4 text-sm font-medium text-zinc-950 transition hover:-translate-y-0.5 hover:bg-white/60 dark:border-white/10 dark:bg-zinc-900/30 dark:text-zinc-50 dark:hover:bg-zinc-900/45"
+                >
+                  GitHub (server) →
+                </a>
+              ) : null}
             </div>
           </div>
         </div>

@@ -15,6 +15,7 @@ const ProjectSchema = new Schema<IProjectDocument>(
     description: { type: String, required: true },
     liveUrl: { type: String, default: "" },
     githubClientUrl: { type: String, default: "" },
+    githubServerUrl: { type: String, default: "" },
     challenges: [{ type: String }],
     improvements: [{ type: String }],
     order: { type: Number, default: 0 },
@@ -22,5 +23,11 @@ const ProjectSchema = new Schema<IProjectDocument>(
   { timestamps: true }
 );
 
+// Clear model cache in dev mode so schema updates (e.g. githubServerUrl) apply immediately
+if (process.env.NODE_ENV !== "production" && mongoose.models.Project) {
+  delete mongoose.models.Project;
+}
+
 export const ProjectModel =
-  mongoose.models.Project || mongoose.model<IProjectDocument>("Project", ProjectSchema);
+  (mongoose.models.Project as mongoose.Model<IProjectDocument>) ||
+  mongoose.model<IProjectDocument>("Project", ProjectSchema);

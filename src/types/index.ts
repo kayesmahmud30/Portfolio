@@ -33,6 +33,7 @@ export interface Project {
   description: string;
   liveUrl: string;
   githubClientUrl: string;
+  githubServerUrl?: string;
   challenges: string[];
   improvements: string[];
 }
