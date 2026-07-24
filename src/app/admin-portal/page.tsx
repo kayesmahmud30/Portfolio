@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, createElement } from "react";
 import { useRouter } from "next/navigation";
 import Container from "@/components/Container";
 import ImageUploader from "@/components/admin/ImageUploader";
 import ProjectModal from "@/components/admin/ProjectModal";
 import EducationModal from "@/components/admin/EducationModal";
 import ExperienceModal from "@/components/admin/ExperienceModal";
+import PromptModal from "@/components/admin/PromptModal";
+import ConfirmModal from "@/components/admin/ConfirmModal";
 import ThemeToggle from "@/components/ThemeToggle";
 import { signOut, authClient } from "@/lib/auth-client";
 import type { Project, SiteConfig, SkillGroup, EducationItem, ExperienceItem } from "@/types";
@@ -67,6 +69,22 @@ export default function AdminDashboardPage() {
   const [newGroupTitle, setNewGroupTitle] = useState("");
   const [toast, setToast] = useState<{ type: "success" | "error"; msg: string } | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Custom Prompt & Confirm Modal States
+  const [promptModalOpen, setPromptModalOpen] = useState(false);
+  const [promptGroupIdx, setPromptGroupIdx] = useState<number | null>(null);
+
+  const [confirmModalState, setConfirmModalState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+  });
 
   // Drag & Drop States
   const [dragGroupIdx, setDragGroupIdx] = useState<number | null>(null);
@@ -163,18 +181,24 @@ export default function AdminDashboardPage() {
     }
   }
 
-  async function handleDeleteProject(id: string) {
-    if (!confirm("Are you sure you want to delete this project?")) return;
-    try {
-      const res = await fetch(`/api/admin/projects/${id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.error);
-      showToast("success", "Project deleted successfully.");
-      fetchData();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to delete project.";
-      showToast("error", msg);
-    }
+  function handleDeleteProject(id: string) {
+    setConfirmModalState({
+      isOpen: true,
+      title: "Delete Project",
+      message: "Are you sure you want to permanently delete this project from MongoDB?",
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/admin/projects/${id}`, { method: "DELETE" });
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.error);
+          showToast("success", "Project deleted successfully.");
+          fetchData();
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : "Failed to delete project.";
+          showToast("error", msg);
+        }
+      },
+    });
   }
 
   // --- Actions: Profile & Banner ---
@@ -224,21 +248,34 @@ export default function AdminDashboardPage() {
   }
 
   function handleDeleteGroup(groupIdx: number) {
-    if (!confirm("Delete this skill category group?")) return;
-    setSkillsList((prev) => prev.filter((_, idx) => idx !== groupIdx));
+    const group = skillsList[groupIdx];
+    setConfirmModalState({
+      isOpen: true,
+      title: "Delete Skill Category",
+      message: `Are you sure you want to delete "${group?.title || "this category"}" and all skills inside it?`,
+      onConfirm: () => {
+        setSkillsList((prev) => prev.filter((_, idx) => idx !== groupIdx));
+        showToast("success", "Category deleted. Click 'Save All Skill Changes' to persist.");
+      },
+    });
   }
 
   function handleAddSkillToGroup(groupIdx: number) {
-    const name = prompt("Enter skill name (e.g. TypeScript):");
-    if (!name?.trim()) return;
+    setPromptGroupIdx(groupIdx);
+    setPromptModalOpen(true);
+  }
+
+  function handleConfirmAddSkill(name: string) {
+    if (promptGroupIdx === null) return;
     setSkillsList((prev) => {
       const copy = [...prev];
-      copy[groupIdx] = {
-        ...copy[groupIdx],
-        skills: [...copy[groupIdx].skills, { name: name.trim(), level: 80 }],
+      copy[promptGroupIdx] = {
+        ...copy[promptGroupIdx],
+        skills: [...copy[promptGroupIdx].skills, { name, level: 80 }],
       };
       return copy;
     });
+    showToast("success", `Added "${name}". Click 'Save All Skill Changes' to save.`);
   }
 
   function handleDeleteSkill(groupIdx: number, skillIdx: number) {
@@ -400,9 +437,16 @@ export default function AdminDashboardPage() {
   }
 
   function handleDeleteEducation(index: number) {
-    if (!confirm("Delete this education entry?")) return;
-    const updated = educationList.filter((_, idx) => idx !== index);
-    handleSaveEducationList(updated);
+    const item = educationList[index];
+    setConfirmModalState({
+      isOpen: true,
+      title: "Delete Education Entry",
+      message: `Are you sure you want to delete "${item?.degree || item?.institution || "this entry"}"?`,
+      onConfirm: () => {
+        const updated = educationList.filter((_, idx) => idx !== index);
+        handleSaveEducationList(updated);
+      },
+    });
   }
 
   // --- Actions: Experience ---
@@ -434,9 +478,16 @@ export default function AdminDashboardPage() {
   }
 
   function handleDeleteExperience(index: number) {
-    if (!confirm("Delete this experience entry?")) return;
-    const updated = experienceList.filter((_, idx) => idx !== index);
-    handleSaveExperienceList(updated);
+    const item = experienceList[index];
+    setConfirmModalState({
+      isOpen: true,
+      title: "Delete Experience Entry",
+      message: `Are you sure you want to delete "${item?.role || item?.company || "this entry"}"?`,
+      onConfirm: () => {
+        const updated = experienceList.filter((_, idx) => idx !== index);
+        handleSaveExperienceList(updated);
+      },
+    });
   }
 
   const filteredProjects = projectsList.filter((p) =>
@@ -1013,7 +1064,7 @@ export default function AdminDashboardPage() {
                         const isSkillDragging =
                           dragSkillLoc?.groupIdx === groupIdx && dragSkillLoc?.skillIdx === skillIdx;
 
-                        const SkillIconComp = getSkillIcon(skill.name);
+                        const skillIcon = getSkillIcon(skill.name);
 
                         return (
                           <div
@@ -1031,7 +1082,9 @@ export default function AdminDashboardPage() {
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <FiMove className="text-xs text-zinc-400 shrink-0" />
-                                <SkillIconComp className="text-sm text-indigo-600 dark:text-indigo-400 shrink-0" />
+                                {createElement(skillIcon, {
+                                  className: "text-sm text-indigo-600 dark:text-indigo-400 shrink-0",
+                                })}
                                 <span className="text-xs font-semibold">{skill.name}</span>
                               </div>
                               <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
@@ -1223,6 +1276,26 @@ export default function AdminDashboardPage() {
         onClose={() => setExpModalOpen(false)}
         onSave={handleSaveExpItem}
         initialItem={editingExpIndex !== null ? experienceList[editingExpIndex] : null}
+      />
+
+      {/* Custom Prompt Modal for Adding Skill */}
+      <PromptModal
+        isOpen={promptModalOpen}
+        title="Add New Skill"
+        subtitle="Type skill name to automatically detect its official brand icon (e.g. TypeScript, MongoDB, Docker)."
+        placeholder="e.g. TypeScript"
+        confirmText="Add Skill"
+        onClose={() => setPromptModalOpen(false)}
+        onSubmit={handleConfirmAddSkill}
+      />
+
+      {/* Custom Confirmation Modal for Deletions */}
+      <ConfirmModal
+        isOpen={confirmModalState.isOpen}
+        title={confirmModalState.title}
+        message={confirmModalState.message}
+        onClose={() => setConfirmModalState((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModalState.onConfirm}
       />
     </div>
   );
