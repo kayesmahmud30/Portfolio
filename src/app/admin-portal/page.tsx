@@ -67,6 +67,10 @@ export default function AdminDashboardPage() {
   const [toast, setToast] = useState<{ type: "success" | "error"; msg: string } | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // Drag & Drop States
+  const [dragGroupIdx, setDragGroupIdx] = useState<number | null>(null);
+  const [dragSkillLoc, setDragSkillLoc] = useState<{ groupIdx: number; skillIdx: number } | null>(null);
+
   const showToast = useCallback((type: "success" | "error", msg: string) => {
     setToast({ type, msg });
     setTimeout(() => setToast(null), 4000);
@@ -255,6 +259,67 @@ export default function AdminDashboardPage() {
       copy[groupIdx] = { ...copy[groupIdx], skills: skillsCopy };
       return copy;
     });
+  }
+
+  // --- Drag & Drop: Group Re-ordering (GitHub Pinned Repos Style) ---
+  function handleGroupDragStart(e: React.DragEvent, idx: number) {
+    setDragGroupIdx(idx);
+    e.dataTransfer.effectAllowed = "move";
+  }
+
+  function handleGroupDragOver(e: React.DragEvent, targetIdx: number) {
+    e.preventDefault();
+    if (dragGroupIdx === null || dragGroupIdx === targetIdx) return;
+
+    setSkillsList((prev) => {
+      const copy = [...prev];
+      const [draggedItem] = copy.splice(dragGroupIdx, 1);
+      copy.splice(targetIdx, 0, draggedItem);
+      return copy;
+    });
+    setDragGroupIdx(targetIdx);
+  }
+
+  function handleGroupDragEnd() {
+    setDragGroupIdx(null);
+  }
+
+  // --- Drag & Drop: Skill Item Re-ordering ---
+  function handleSkillDragStart(e: React.DragEvent, groupIdx: number, skillIdx: number) {
+    e.stopPropagation();
+    setDragSkillLoc({ groupIdx, skillIdx });
+    e.dataTransfer.effectAllowed = "move";
+  }
+
+  function handleSkillDragOver(e: React.DragEvent, targetGroupIdx: number, targetSkillIdx: number) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!dragSkillLoc) return;
+    if (dragSkillLoc.groupIdx === targetGroupIdx && dragSkillLoc.skillIdx === targetSkillIdx) return;
+
+    setSkillsList((prev) => {
+      const copy = [...prev];
+      const sourceSkills = [...copy[dragSkillLoc.groupIdx].skills];
+      const [movedSkill] = sourceSkills.splice(dragSkillLoc.skillIdx, 1);
+
+      if (dragSkillLoc.groupIdx === targetGroupIdx) {
+        sourceSkills.splice(targetSkillIdx, 0, movedSkill);
+        copy[targetGroupIdx] = { ...copy[targetGroupIdx], skills: sourceSkills };
+      } else {
+        const destSkills = [...copy[targetGroupIdx].skills];
+        destSkills.splice(targetSkillIdx, 0, movedSkill);
+        copy[dragSkillLoc.groupIdx] = { ...copy[dragSkillLoc.groupIdx], skills: sourceSkills };
+        copy[targetGroupIdx] = { ...copy[targetGroupIdx], skills: destSkills };
+      }
+      return copy;
+    });
+
+    setDragSkillLoc({ groupIdx: targetGroupIdx, skillIdx: targetSkillIdx });
+  }
+
+  function handleSkillDragEnd(e: React.DragEvent) {
+    e.stopPropagation();
+    setDragSkillLoc(null);
   }
 
   function handleMoveGroupUp(groupIdx: number) {
@@ -881,107 +946,140 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-              {skillsList.map((group, groupIdx) => (
-                <div
-                  key={group.title + groupIdx}
-                  className="rounded-3xl border border-black/10 bg-[var(--card)] p-5 backdrop-blur dark:border-white/10 space-y-4 shadow-sm"
-                >
-                  <div className="flex items-center justify-between border-b border-black/5 pb-3 dark:border-white/10">
-                    <div className="flex items-center gap-2">
-                      <FiMove className="text-xs text-zinc-400 cursor-grab" title="Drag / Reorder Group" />
-                      <h3 className="text-sm font-bold">{group.title}</h3>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => handleMoveGroupUp(groupIdx)}
-                        disabled={groupIdx === 0}
-                        className="rounded-xl border border-black/10 p-1.5 text-xs font-semibold hover:bg-black/5 disabled:opacity-30 dark:border-white/10 dark:hover:bg-white/10"
-                        title="Move group left / up"
-                      >
-                        <FiArrowUp />
-                      </button>
-                      <button
-                        onClick={() => handleMoveGroupDown(groupIdx)}
-                        disabled={groupIdx === skillsList.length - 1}
-                        className="rounded-xl border border-black/10 p-1.5 text-xs font-semibold hover:bg-black/5 disabled:opacity-30 dark:border-white/10 dark:hover:bg-white/10"
-                        title="Move group right / down"
-                      >
-                        <FiArrowDown />
-                      </button>
-                      <button
-                        onClick={() => handleAddSkillToGroup(groupIdx)}
-                        className="rounded-xl border border-black/10 p-1.5 text-xs font-semibold hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
-                        title="Add skill to this group"
-                      >
-                        <FiPlus />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteGroup(groupIdx)}
-                        className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-500/20 dark:text-rose-400"
-                        title="Delete group"
-                      >
-                        <FiTrash2 />
-                      </button>
-                    </div>
-                  </div>
+              {skillsList.map((group, groupIdx) => {
+                const isGroupDragging = dragGroupIdx === groupIdx;
 
-                  <div className="space-y-3">
-                    {group.skills?.map((skill, skillIdx) => (
-                      <div
-                        key={skill.name + skillIdx}
-                        className="rounded-2xl border border-black/5 bg-white/40 p-3 backdrop-blur dark:border-white/10 dark:bg-zinc-900/30"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <FiMove className="text-xs text-zinc-400 cursor-grab shrink-0" />
-                            <span className="text-xs font-semibold">{skill.name}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => handleMoveSkillUp(groupIdx, skillIdx)}
-                              disabled={skillIdx === 0}
-                              className="text-zinc-500 hover:text-zinc-950 disabled:opacity-20 dark:hover:text-zinc-50 text-xs p-1"
-                              title="Move skill up"
-                            >
-                              <FiArrowUp />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleMoveSkillDown(groupIdx, skillIdx)}
-                              disabled={skillIdx === group.skills.length - 1}
-                              className="text-zinc-500 hover:text-zinc-950 disabled:opacity-20 dark:hover:text-zinc-50 text-xs p-1"
-                              title="Move skill down"
-                            >
-                              <FiArrowDown />
-                            </button>
-                            <span className="ml-1 text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                              {skill.level}%
-                            </span>
-                            <button
-                              onClick={() => handleDeleteSkill(groupIdx, skillIdx)}
-                              className="text-rose-500 hover:text-rose-700 dark:hover:text-rose-300 text-xs p-1"
-                              title="Delete skill"
-                            >
-                              <FiTrash2 />
-                            </button>
-                          </div>
-                        </div>
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={skill.level}
-                          onChange={(e) =>
-                            handleSkillLevelChange(groupIdx, skillIdx, parseInt(e.target.value, 10))
-                          }
-                          className="mt-2 w-full accent-indigo-600 cursor-pointer"
-                        />
+                return (
+                  <div
+                    key={group.title + groupIdx}
+                    draggable
+                    onDragStart={(e) => handleGroupDragStart(e, groupIdx)}
+                    onDragOver={(e) => handleGroupDragOver(e, groupIdx)}
+                    onDragEnd={handleGroupDragEnd}
+                    className={`group rounded-3xl border bg-[var(--card)] p-5 backdrop-blur space-y-4 transition-all duration-200 cursor-grab active:cursor-grabbing ${
+                      isGroupDragging
+                        ? "border-dashed border-indigo-500 bg-indigo-500/5 shadow-2xl scale-[1.02] opacity-85"
+                        : "border-black/10 hover:border-black/20 dark:border-white/10 dark:hover:border-white/20 shadow-sm"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between border-b border-black/5 pb-3 dark:border-white/10">
+                      <div className="flex items-center gap-2">
+                        <span className="grid h-6 w-6 place-items-center rounded-lg bg-black/5 text-zinc-500 dark:bg-white/10 dark:text-zinc-400 group-hover:bg-indigo-600 group-hover:text-white transition">
+                          <FiMove className="text-xs shrink-0" />
+                        </span>
+                        <h3 className="text-sm font-bold tracking-tight">{group.title}</h3>
                       </div>
-                    ))}
+                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={() => handleMoveGroupUp(groupIdx)}
+                          disabled={groupIdx === 0}
+                          className="rounded-xl border border-black/10 p-1.5 text-xs font-semibold hover:bg-black/5 disabled:opacity-30 dark:border-white/10 dark:hover:bg-white/10"
+                          title="Move group left / up"
+                        >
+                          <FiArrowUp />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleMoveGroupDown(groupIdx)}
+                          disabled={groupIdx === skillsList.length - 1}
+                          className="rounded-xl border border-black/10 p-1.5 text-xs font-semibold hover:bg-black/5 disabled:opacity-30 dark:border-white/10 dark:hover:bg-white/10"
+                          title="Move group right / down"
+                        >
+                          <FiArrowDown />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleAddSkillToGroup(groupIdx)}
+                          className="rounded-xl border border-black/10 p-1.5 text-xs font-semibold hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                          title="Add skill to this group"
+                        >
+                          <FiPlus />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteGroup(groupIdx)}
+                          className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-500/20 dark:text-rose-400"
+                          title="Delete group"
+                        >
+                          <FiTrash2 />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      {group.skills?.map((skill, skillIdx) => {
+                        const isSkillDragging =
+                          dragSkillLoc?.groupIdx === groupIdx && dragSkillLoc?.skillIdx === skillIdx;
+
+                        return (
+                          <div
+                            key={skill.name + skillIdx}
+                            draggable
+                            onDragStart={(e) => handleSkillDragStart(e, groupIdx, skillIdx)}
+                            onDragOver={(e) => handleSkillDragOver(e, groupIdx, skillIdx)}
+                            onDragEnd={handleSkillDragEnd}
+                            className={`rounded-2xl border p-3 transition-all duration-150 cursor-grab active:cursor-grabbing ${
+                              isSkillDragging
+                                ? "border-dashed border-indigo-500 bg-indigo-500/10 shadow-lg scale-[1.01]"
+                                : "border-black/5 bg-white/40 hover:bg-white/60 dark:border-white/10 dark:bg-zinc-900/30 dark:hover:bg-zinc-900/50"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <FiMove className="text-xs text-zinc-400 shrink-0" />
+                                <span className="text-xs font-semibold">{skill.name}</span>
+                              </div>
+                              <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleMoveSkillUp(groupIdx, skillIdx)}
+                                  disabled={skillIdx === 0}
+                                  className="text-zinc-500 hover:text-zinc-950 disabled:opacity-20 dark:hover:text-zinc-50 text-xs p-1"
+                                  title="Move skill up"
+                                >
+                                  <FiArrowUp />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleMoveSkillDown(groupIdx, skillIdx)}
+                                  disabled={skillIdx === group.skills.length - 1}
+                                  className="text-zinc-500 hover:text-zinc-950 disabled:opacity-20 dark:hover:text-zinc-50 text-xs p-1"
+                                  title="Move skill down"
+                                >
+                                  <FiArrowDown />
+                                </button>
+                                <span className="ml-1 text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                                  {skill.level}%
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteSkill(groupIdx, skillIdx)}
+                                  className="text-rose-500 hover:text-rose-700 dark:hover:text-rose-300 text-xs p-1"
+                                  title="Delete skill"
+                                >
+                                  <FiTrash2 />
+                                </button>
+                              </div>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value={skill.level}
+                              onChange={(e) =>
+                                handleSkillLevelChange(groupIdx, skillIdx, parseInt(e.target.value, 10))
+                              }
+                              onClick={(e) => e.stopPropagation()}
+                              className="mt-2 w-full accent-indigo-600 cursor-pointer"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ) : null}
