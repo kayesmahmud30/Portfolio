@@ -10,6 +10,7 @@ import ExperienceModal from "@/components/admin/ExperienceModal";
 import ThemeToggle from "@/components/ThemeToggle";
 import { signOut, authClient } from "@/lib/auth-client";
 import type { Project, SiteConfig, SkillGroup, EducationItem, ExperienceItem } from "@/types";
+import { getSkillIcon } from "@/lib/skillIcons";
 import {
   FiGrid,
   FiUser,
@@ -1012,6 +1013,8 @@ export default function AdminDashboardPage() {
                         const isSkillDragging =
                           dragSkillLoc?.groupIdx === groupIdx && dragSkillLoc?.skillIdx === skillIdx;
 
+                        const SkillIconComp = getSkillIcon(skill.name);
+
                         return (
                           <div
                             key={skill.name + skillIdx}
@@ -1028,6 +1031,7 @@ export default function AdminDashboardPage() {
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <FiMove className="text-xs text-zinc-400 shrink-0" />
+                                <SkillIconComp className="text-sm text-indigo-600 dark:text-indigo-400 shrink-0" />
                                 <span className="text-xs font-semibold">{skill.name}</span>
                               </div>
                               <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>

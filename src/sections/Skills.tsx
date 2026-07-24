@@ -1,39 +1,13 @@
 "use client";
 
-import { useEffect, useState, type ComponentType } from "react";
+import { useEffect, useState } from "react";
 import AnimatedSection from "@/components/AnimatedSection";
 import Container from "@/components/Container";
 import SectionHeading from "@/components/SectionHeading";
 import SkillBar from "@/components/SkillBar";
 import { skillGroups as staticSkillGroups } from "@/data/skills";
 import type { SkillGroup } from "@/types";
-import {
-  SiCss,
-  SiExpress,
-  SiGithub,
-  SiGit,
-  SiHtml5,
-  SiJavascript,
-  SiNextdotjs,
-  SiNodedotjs,
-  SiReact,
-  SiTailwindcss,
-} from "react-icons/si";
-import { FiCode } from "react-icons/fi";
-
-const iconMap: Record<string, ComponentType<{ className?: string }>> = {
-  HTML: SiHtml5,
-  CSS: SiCss,
-  Tailwind: SiTailwindcss,
-  JavaScript: SiJavascript,
-  React: SiReact,
-  "Next.js": SiNextdotjs,
-  "Node.js": SiNodedotjs,
-  Express: SiExpress,
-  Git: SiGit,
-  GitHub: SiGithub,
-  "VS Code": FiCode,
-};
+import { getSkillIcon } from "@/lib/skillIcons";
 
 export default function Skills() {
   const [groups, setGroups] = useState<SkillGroup[]>(staticSkillGroups);
@@ -67,8 +41,7 @@ export default function Skills() {
                 </div>
                 <div className="grid gap-3">
                   {group.skills.map((s) => {
-                    const IconComponent =
-                      s.icon || iconMap[s.name] || iconMap[(s as { iconName?: string }).iconName || ""] || FiCode;
+                    const IconComponent = s.icon || getSkillIcon(s.name);
                     return (
                       <SkillBar
                         key={s.name}
