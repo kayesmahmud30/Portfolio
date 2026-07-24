@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { FiMenu, FiX } from "react-icons/fi";
 import Container from "@/components/Container";
 import ThemeToggle from "@/components/ThemeToggle";
-import { navLinks } from "@/data/site";
+import { navLinks as baseNavLinks } from "@/data/site";
 import { useActiveSection } from "@/components/hooks/useActiveSection";
 
 function scrollToId(id: string) {
@@ -15,7 +15,31 @@ function scrollToId(id: string) {
 }
 
 export default function Navbar() {
-  const ids = useMemo(() => navLinks.map((l) => l.id), []);
+  const [hasExperience, setHasExperience] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/admin/experience")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.ok && Array.isArray(data.data) && data.data.length > 0) {
+          setHasExperience(true);
+        } else {
+          setHasExperience(false);
+        }
+      })
+      .catch(() => setHasExperience(false));
+  }, []);
+
+  const navLinks = useMemo(() => {
+    return baseNavLinks.filter((link) => {
+      if (link.id === "experience") {
+        return hasExperience;
+      }
+      return true;
+    });
+  }, [hasExperience]);
+
+  const ids = useMemo(() => navLinks.map((l) => l.id), [navLinks]);
   const activeId = useActiveSection(ids);
   const [open, setOpen] = useState(false);
 
