@@ -15,29 +15,9 @@ function scrollToId(id: string) {
 }
 
 export default function Navbar() {
-  const [hasExp, setHasExp] = useState(true);
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/admin/experience")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.ok && Array.isArray(data.data)) {
-          setHasExp(data.data.length > 0);
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  const visibleNavLinks = useMemo(() => {
-    if (!hasExp) {
-      return navLinks.filter((l) => l.id !== "experience");
-    }
-    return navLinks;
-  }, [hasExp]);
-
-  const ids = useMemo(() => visibleNavLinks.map((l) => l.id), [visibleNavLinks]);
+  const ids = useMemo(() => navLinks.map((l) => l.id), []);
   const activeId = useActiveSection(ids);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -76,7 +56,7 @@ export default function Navbar() {
           </a>
 
           <nav className="hidden items-center gap-1 md:flex">
-            {visibleNavLinks.map((l) => {
+            {navLinks.map((l) => {
               const isActive = activeId === l.id;
               return (
                 <a
@@ -152,7 +132,7 @@ export default function Navbar() {
                 </button>
               </div>
               <div className="mt-2 grid gap-1">
-                {visibleNavLinks.map((l) => {
+                {navLinks.map((l) => {
                   const isActive = activeId === l.id;
                   return (
                     <button
