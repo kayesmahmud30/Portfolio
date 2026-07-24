@@ -10,23 +10,8 @@ export async function GET() {
       return NextResponse.json({ ok: true, data: staticSkillGroups }, { status: 200 });
     }
 
-    let items = await SkillGroupModel.find().lean();
-    if (!items || items.length === 0) {
-      // Seed default skills
-      await SkillGroupModel.insertMany(
-        staticSkillGroups.map((g) => ({
-          title: g.title,
-          skills: g.skills.map((s) => ({
-            name: s.name,
-            iconName: s.name,
-            level: s.level,
-          })),
-        }))
-      );
-      items = await SkillGroupModel.find().lean();
-    }
-
-    return NextResponse.json({ ok: true, data: items }, { status: 200 });
+    const items = await SkillGroupModel.find().lean();
+    return NextResponse.json({ ok: true, data: items || [] }, { status: 200 });
   } catch (error: unknown) {
     console.error("GET /api/admin/skills error:", error);
     return NextResponse.json({ ok: true, data: staticSkillGroups }, { status: 200 });
@@ -46,7 +31,10 @@ export async function PUT(req: NextRequest) {
     }
 
     await SkillGroupModel.deleteMany({});
-    const created = await SkillGroupModel.insertMany(body);
+    let created: unknown[] = [];
+    if (Array.isArray(body) && body.length > 0) {
+      created = await SkillGroupModel.insertMany(body);
+    }
 
     return NextResponse.json({ ok: true, data: created }, { status: 200 });
   } catch (error: unknown) {

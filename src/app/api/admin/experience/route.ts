@@ -10,13 +10,8 @@ export async function GET() {
       return NextResponse.json({ ok: true, data: staticExperience }, { status: 200 });
     }
 
-    let items = await ExperienceModel.find().sort({ createdAt: -1 }).lean();
-    if (!items || items.length === 0 && staticExperience.length > 0) {
-      await ExperienceModel.insertMany(staticExperience);
-      items = await ExperienceModel.find().sort({ createdAt: -1 }).lean();
-    }
-
-    return NextResponse.json({ ok: true, data: items }, { status: 200 });
+    const items = await ExperienceModel.find().sort({ createdAt: -1 }).lean();
+    return NextResponse.json({ ok: true, data: items || [] }, { status: 200 });
   } catch (error: unknown) {
     console.error("GET /api/admin/experience error:", error);
     return NextResponse.json({ ok: true, data: staticExperience }, { status: 200 });
@@ -36,7 +31,10 @@ export async function PUT(req: NextRequest) {
     }
 
     await ExperienceModel.deleteMany({});
-    const created = await ExperienceModel.insertMany(body);
+    let created: unknown[] = [];
+    if (Array.isArray(body) && body.length > 0) {
+      created = await ExperienceModel.insertMany(body);
+    }
 
     return NextResponse.json({ ok: true, data: created }, { status: 200 });
   } catch (error: unknown) {

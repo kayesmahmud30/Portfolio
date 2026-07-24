@@ -15,7 +15,7 @@ export default function Projects() {
     fetch("/api/admin/projects")
       .then((res) => res.json())
       .then((data) => {
-        if (data.ok && Array.isArray(data.data) && data.data.length > 0) {
+        if (data.ok && Array.isArray(data.data)) {
           setProjectList(data.data);
         }
       })
@@ -31,11 +31,19 @@ export default function Projects() {
           subtitle="A few projects that reflect my approach: clean structure, modern UI, and thoughtful motion."
         />
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {projectList.map((p) => (
-            <ProjectCard key={p.slug} project={p} />
-          ))}
-        </div>
+        {projectList.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {projectList.map((p) => (
+              <ProjectCard key={p.slug} project={p} />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-3xl border border-black/10 bg-[var(--card)] p-8 text-center backdrop-blur dark:border-white/10">
+            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+              No projects added yet. Add projects from the Admin Dashboard.
+            </p>
+          </div>
+        )}
       </Container>
     </AnimatedSection>
   );

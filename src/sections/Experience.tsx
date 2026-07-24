@@ -14,7 +14,7 @@ export default function Experience() {
     fetch("/api/admin/experience")
       .then((res) => res.json())
       .then((data) => {
-        if (data.ok && Array.isArray(data.data) && data.data.length > 0) {
+        if (data.ok && Array.isArray(data.data)) {
           setItems(data.data);
         }
       })
@@ -52,7 +52,7 @@ export default function Experience() {
                     {item.duration}
                   </div>
                 </div>
-                {Array.isArray(item.responsibilities) ? (
+                {Array.isArray(item.responsibilities) && item.responsibilities.length > 0 ? (
                   <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-7 text-zinc-600 dark:text-zinc-300">
                     {item.responsibilities.map((r) => (
                       <li key={r}>{r}</li>

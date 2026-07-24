@@ -10,13 +10,8 @@ export async function GET() {
       return NextResponse.json({ ok: true, data: staticEducation }, { status: 200 });
     }
 
-    let items = await EducationModel.find().sort({ createdAt: -1 }).lean();
-    if (!items || items.length === 0) {
-      await EducationModel.insertMany(staticEducation);
-      items = await EducationModel.find().sort({ createdAt: -1 }).lean();
-    }
-
-    return NextResponse.json({ ok: true, data: items }, { status: 200 });
+    const items = await EducationModel.find().sort({ createdAt: -1 }).lean();
+    return NextResponse.json({ ok: true, data: items || [] }, { status: 200 });
   } catch (error: unknown) {
     console.error("GET /api/admin/education error:", error);
     return NextResponse.json({ ok: true, data: staticEducation }, { status: 200 });
@@ -36,7 +31,10 @@ export async function PUT(req: NextRequest) {
     }
 
     await EducationModel.deleteMany({});
-    const created = await EducationModel.insertMany(body);
+    let created: unknown[] = [];
+    if (Array.isArray(body) && body.length > 0) {
+      created = await EducationModel.insertMany(body);
+    }
 
     return NextResponse.json({ ok: true, data: created }, { status: 200 });
   } catch (error: unknown) {

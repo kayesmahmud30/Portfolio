@@ -42,7 +42,7 @@ export default function Skills() {
     fetch("/api/admin/skills")
       .then((res) => res.json())
       .then((data) => {
-        if (data.ok && Array.isArray(data.data) && data.data.length > 0) {
+        if (data.ok && Array.isArray(data.data)) {
           setGroups(data.data);
         }
       })
@@ -58,29 +58,37 @@ export default function Skills() {
           subtitle="A practical mix of frontend, backend fundamentals, and daily tools—always improving through projects."
         />
 
-        <div className="grid gap-8 lg:grid-cols-3">
-          {groups.map((group) => (
-            <div key={group.title}>
-              <div className="mb-3 text-sm font-semibold text-zinc-950 dark:text-zinc-50">
-                {group.title}
+        {groups.length > 0 ? (
+          <div className="grid gap-8 lg:grid-cols-3">
+            {groups.map((group) => (
+              <div key={group.title}>
+                <div className="mb-3 text-sm font-semibold text-zinc-950 dark:text-zinc-50">
+                  {group.title}
+                </div>
+                <div className="grid gap-3">
+                  {group.skills.map((s) => {
+                    const IconComponent =
+                      s.icon || iconMap[s.name] || iconMap[(s as { iconName?: string }).iconName || ""] || FiCode;
+                    return (
+                      <SkillBar
+                        key={s.name}
+                        icon={IconComponent}
+                        name={s.name}
+                        level={s.level}
+                      />
+                    );
+                  })}
+                </div>
               </div>
-              <div className="grid gap-3">
-                {group.skills.map((s) => {
-                  const IconComponent =
-                    s.icon || iconMap[s.name] || iconMap[(s as { iconName?: string }).iconName || ""] || FiCode;
-                  return (
-                    <SkillBar
-                      key={s.name}
-                      icon={IconComponent}
-                      name={s.name}
-                      level={s.level}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-3xl border border-black/10 bg-[var(--card)] p-8 text-center backdrop-blur dark:border-white/10">
+            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+              No skills added yet. Manage skills from the Admin Dashboard.
+            </p>
+          </div>
+        )}
       </Container>
     </AnimatedSection>
   );

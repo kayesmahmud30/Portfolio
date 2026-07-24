@@ -10,13 +10,8 @@ export async function GET() {
       return NextResponse.json({ ok: true, data: staticProjects }, { status: 200 });
     }
 
-    let items = await ProjectModel.find().sort({ order: 1, createdAt: -1 }).lean();
-    if (!items || items.length === 0) {
-      await ProjectModel.insertMany(staticProjects);
-      items = await ProjectModel.find().sort({ order: 1, createdAt: -1 }).lean();
-    }
-
-    return NextResponse.json({ ok: true, data: items }, { status: 200 });
+    const items = await ProjectModel.find().sort({ order: 1, createdAt: -1 }).lean();
+    return NextResponse.json({ ok: true, data: items || [] }, { status: 200 });
   } catch (error: unknown) {
     console.error("GET /api/admin/projects error:", error);
     return NextResponse.json({ ok: true, data: staticProjects }, { status: 200 });
