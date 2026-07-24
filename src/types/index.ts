@@ -5,6 +5,9 @@ export interface SocialLinks {
   linkedin?: string;
   twitter?: string;
   facebook?: string;
+  youtube?: string;
+  instagram?: string;
+  leetcode?: string;
   [key: string]: string | undefined;
 }
 
@@ -13,10 +16,13 @@ export interface SiteConfig {
   designationLoop: string[];
   intro: string;
   location: string;
-  email: string;
-  phone: string;
-  whatsapp: string;
   socials: SocialLinks;
+}
+
+export interface ContactConfig {
+  email: string;
+  phone?: string;
+  whatsapp?: string;
 }
 
 export interface NavLink {

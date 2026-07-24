@@ -1,7 +1,8 @@
 "use client";
 
 import type { ComponentType } from "react";
-import { FaFacebookF, FaGithub, FaLinkedinIn, FaTwitter } from "react-icons/fa";
+import { FaFacebookF, FaGithub, FaLinkedinIn, FaTwitter, FaYoutube, FaInstagram, FaWhatsapp } from "react-icons/fa";
+import { SiLeetcode } from "react-icons/si";
 import type { SocialLinks as SocialLinksType } from "@/types";
 
 interface SocialLinksProps {
@@ -14,10 +15,14 @@ const icons: Record<string, ComponentType<{ className?: string }>> = {
   linkedin: FaLinkedinIn,
   twitter: FaTwitter,
   facebook: FaFacebookF,
+  youtube: FaYoutube,
+  instagram: FaInstagram,
+  leetcode: SiLeetcode,
+  whatsapp: FaWhatsapp,
 };
 
 export default function SocialLinks({ links, className = "" }: SocialLinksProps) {
-  const items = Object.entries(links ?? {}).filter(([, href]) => !!href) as [string, string][];
+  const items = Object.entries(links ?? {}).filter(([, href]) => !!href?.trim()) as [string, string][];
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>

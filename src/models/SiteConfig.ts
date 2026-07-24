@@ -9,6 +9,9 @@ export interface ISiteConfigDocument extends Omit<ISiteConfig, "socials">, Docum
     linkedin?: string;
     twitter?: string;
     facebook?: string;
+    youtube?: string;
+    instagram?: string;
+    leetcode?: string;
   };
 }
 
@@ -18,9 +21,6 @@ const SiteConfigSchema = new Schema<ISiteConfigDocument>(
     designationLoop: [{ type: String, required: true }],
     intro: { type: String, required: true },
     location: { type: String, required: true },
-    email: { type: String, required: true },
-    phone: { type: String, default: "" },
-    whatsapp: { type: String, default: "" },
     profileImage: { type: String, default: "/profile.jpg" },
     bannerImage: { type: String, default: "" },
     socials: {
@@ -28,10 +28,17 @@ const SiteConfigSchema = new Schema<ISiteConfigDocument>(
       linkedin: { type: String, default: "" },
       twitter: { type: String, default: "" },
       facebook: { type: String, default: "" },
+      youtube: { type: String, default: "" },
+      instagram: { type: String, default: "" },
+      leetcode: { type: String, default: "" },
     },
   },
   { timestamps: true }
 );
+
+if (process.env.NODE_ENV === "development") {
+  delete mongoose.models.SiteConfig;
+}
 
 export const SiteConfigModel =
   mongoose.models.SiteConfig ||

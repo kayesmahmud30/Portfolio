@@ -1,4 +1,4 @@
-import type { NavLink, SiteConfig } from "@/types";
+import type { NavLink, SiteConfig, ContactConfig } from "@/types";
 
 export const site: SiteConfig = {
   name: "Kayes Mahmud",
@@ -6,15 +6,18 @@ export const site: SiteConfig = {
   intro:
     "I build fast, accessible web experiences with clean UI, thoughtful UX, and modern front-end engineering.",
   location: "Dhaka, Bangladesh",
-  email: "mahmudkayes30@gmail.com",
-  phone: "+880 1325-309204",
-  whatsapp: "",
   socials: {
     github: "https://github.com/kayesmahmud30",
     linkedin: "https://www.linkedin.com/in/kayesmahmud30",
     twitter: "https://twitter.com/kayesmahmud30",
     facebook: "https://www.facebook.com/kayesmahmud40",
   },
+};
+
+export const defaultContact: ContactConfig = {
+  email: "mahmudkayes30@gmail.com",
+  phone: "+880 1325-309204",
+  whatsapp: "",
 };
 
 export const navLinks: NavLink[] = [

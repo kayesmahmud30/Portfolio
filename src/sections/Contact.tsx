@@ -1,12 +1,11 @@
 "use client";
 
-import { useMemo, useState, type FormEvent, type HTMLInputTypeAttribute } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import AnimatedSection from "@/components/AnimatedSection";
 import Container from "@/components/Container";
 import SectionHeading from "@/components/SectionHeading";
-import { site } from "@/data/site";
-import type { ContactFormData, ContactFormErrors, ContactFormStatus } from "@/types";
-import { FiMail, FiPhone, FiSend } from "react-icons/fi";
+import type { ContactConfig, ContactFormData, ContactFormErrors, ContactFormStatus } from "@/types";
+import { FiMail, FiPhone, FiSend, FiMessageSquare } from "react-icons/fi";
 import type { IconType } from "react-icons";
 
 function isValidEmail(value: string): boolean {
@@ -20,32 +19,63 @@ interface ContactItem {
   icon: IconType;
 }
 
+const defaultContact: ContactConfig = {
+  email: "mahmudkayes30@gmail.com",
+  phone: "+8801931835697",
+  whatsapp: "+8801931835697",
+};
+
 export default function Contact() {
+  const [contactData, setContactData] = useState<ContactConfig>(defaultContact);
+
+  useEffect(() => {
+    fetch("/api/admin/contact-config")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.ok && data.data) {
+          setContactData(data.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const contactItems = useMemo<ContactItem[]>(() => {
     const items: ContactItem[] = [];
-    if (site.email)
+
+    if (contactData.email?.trim()) {
       items.push({
         label: "Email",
-        value: site.email,
-        href: `mailto:${site.email}`,
+        value: contactData.email.trim(),
+        href: `mailto:${contactData.email.trim()}`,
         icon: FiMail,
       });
-    if (site.phone)
+    }
+
+    if (contactData.phone?.trim()) {
       items.push({
         label: "Phone",
-        value: site.phone,
-        href: `tel:${site.phone}`,
+        value: contactData.phone.trim(),
+        href: `tel:${contactData.phone.trim()}`,
         icon: FiPhone,
       });
-    if (site.whatsapp)
+    }
+
+    if (contactData.whatsapp?.trim()) {
+      const waVal = contactData.whatsapp.trim();
+      const waHref = waVal.startsWith("http")
+        ? waVal
+        : `https://wa.me/${waVal.replace(/[^0-9]/g, "")}`;
+
       items.push({
         label: "WhatsApp",
-        value: site.whatsapp,
-        href: site.whatsapp,
-        icon: FiPhone,
+        value: waVal,
+        href: waHref,
+        icon: FiMessageSquare,
       });
+    }
+
     return items;
-  }, []);
+  }, [contactData]);
 
   const [form, setForm] = useState<ContactFormData>({ name: "", email: "", message: "" });
   const [errors, setErrors] = useState<ContactFormErrors>({});
@@ -109,6 +139,8 @@ export default function Contact() {
                   <a
                     key={item.label}
                     href={item.href}
+                    target={item.label === "WhatsApp" ? "_blank" : undefined}
+                    rel={item.label === "WhatsApp" ? "noopener noreferrer" : undefined}
                     className="group flex items-center justify-between rounded-2xl border border-black/10 bg-white/40 px-4 py-4 transition hover:-translate-y-0.5 hover:border-black/15 hover:bg-white/60 dark:border-white/10 dark:bg-zinc-900/30 dark:hover:bg-zinc-900/45"
                   >
                     <div className="flex items-center gap-3">

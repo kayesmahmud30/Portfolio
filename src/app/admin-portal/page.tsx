@@ -11,7 +11,7 @@ import PromptModal from "@/components/admin/PromptModal";
 import ConfirmModal from "@/components/admin/ConfirmModal";
 import ThemeToggle from "@/components/ThemeToggle";
 import { signOut, authClient } from "@/lib/auth-client";
-import type { Project, SiteConfig, SkillGroup, EducationItem, ExperienceItem } from "@/types";
+import type { Project, SiteConfig, SkillGroup, EducationItem, ExperienceItem, ContactConfig } from "@/types";
 import { getSkillIcon } from "@/lib/skillIcons";
 import {
   FiGrid,
@@ -35,9 +35,11 @@ import {
   FiArrowUp,
   FiArrowDown,
   FiMove,
+  FiX,
+  FiMail,
 } from "react-icons/fi";
 
-type Tab = "overview" | "projects" | "profile" | "skills" | "education" | "experience";
+type Tab = "overview" | "projects" | "profile" | "skills" | "education" | "experience" | "contact";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -47,6 +49,7 @@ export default function AdminDashboardPage() {
 
   // Content States
   const [siteInfo, setSiteInfo] = useState<Partial<SiteConfig & { profileImage?: string; bannerImage?: string }>>({});
+  const [contactInfo, setContactInfo] = useState<ContactConfig>({ email: "", phone: "", whatsapp: "" });
   const [projectsList, setProjectsList] = useState<Project[]>([]);
   const [skillsList, setSkillsList] = useState<SkillGroup[]>([]);
   const [educationList, setEducationList] = useState<EducationItem[]>([]);
@@ -67,6 +70,7 @@ export default function AdminDashboardPage() {
   const [editingExpIndex, setEditingExpIndex] = useState<number | null>(null);
 
   const [newGroupTitle, setNewGroupTitle] = useState("");
+  const [newDesignation, setNewDesignation] = useState("");
   const [toast, setToast] = useState<{ type: "success" | "error"; msg: string } | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -97,12 +101,13 @@ export default function AdminDashboardPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [siteRes, projectsRes, skillsRes, eduRes, expRes] = await Promise.all([
+      const [siteRes, projectsRes, skillsRes, eduRes, expRes, contactRes] = await Promise.all([
         fetch("/api/admin/site"),
         fetch("/api/admin/projects"),
         fetch("/api/admin/skills"),
         fetch("/api/admin/education"),
         fetch("/api/admin/experience"),
+        fetch("/api/admin/contact-config"),
       ]);
 
       const siteData = await siteRes.json();
@@ -110,12 +115,14 @@ export default function AdminDashboardPage() {
       const skillsData = await skillsRes.json();
       const eduData = await eduRes.json();
       const expData = await expRes.json();
+      const contactData = await contactRes.json();
 
       if (siteData.ok) setSiteInfo(siteData.data);
       if (projectsData.ok) setProjectsList(projectsData.data);
       if (skillsData.ok) setSkillsList(skillsData.data);
       if (eduData.ok) setEducationList(eduData.data);
       if (expData.ok) setExperienceList(expData.data);
+      if (contactData.ok) setContactInfo(contactData.data);
     } catch {
       showToast("error", "Failed to load dashboard data.");
     } finally {
@@ -215,6 +222,44 @@ export default function AdminDashboardPage() {
       showToast("success", "Profile and site configuration updated.");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to update profile.";
+      showToast("error", msg);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function handleAddDesignation() {
+    if (!newDesignation.trim()) return;
+    const current = siteInfo.designationLoop || [];
+    setSiteInfo((s) => ({
+      ...s,
+      designationLoop: [...current, newDesignation.trim()],
+    }));
+    setNewDesignation("");
+  }
+
+  function handleRemoveDesignation(idx: number) {
+    const current = siteInfo.designationLoop || [];
+    setSiteInfo((s) => ({
+      ...s,
+      designationLoop: current.filter((_, i) => i !== idx),
+    }));
+  }
+
+  // --- Actions: Contact Section ---
+  async function handleSaveContactInfo() {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/contact-config", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(contactInfo),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error);
+      showToast("success", "Contact section configuration updated.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to update contact info.";
       showToast("error", msg);
     } finally {
       setSaving(false);
@@ -557,6 +602,7 @@ export default function AdminDashboardPage() {
                 {activeTab === "skills" && <FiBookOpen className="text-sm" />}
                 {activeTab === "education" && <FiBookOpen className="text-sm" />}
                 {activeTab === "experience" && <FiBriefcase className="text-sm" />}
+                {activeTab === "contact" && <FiMail className="text-sm" />}
               </span>
               <span className="capitalize">{activeTab} Management</span>
             </div>
@@ -576,6 +622,7 @@ export default function AdminDashboardPage() {
                 { id: "skills", label: "Skills Manager", icon: FiBookOpen, count: null },
                 { id: "education", label: "Education History", icon: FiBookOpen, count: educationList.length },
                 { id: "experience", label: "Work Experience", icon: FiBriefcase, count: experienceList.length },
+                { id: "contact", label: "Contact Info", icon: FiMail, count: null },
               ].map((tabItem) => {
                 const IconComp = tabItem.icon;
                 const isActive = activeTab === tabItem.id;
@@ -680,6 +727,17 @@ export default function AdminDashboardPage() {
             }`}
           >
             <FiBriefcase /> Experience ({experienceList.length})
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("contact")}
+            className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-4 py-2.5 text-xs font-semibold transition ${
+              activeTab === "contact"
+                ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 shadow-md"
+                : "text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
+            }`}
+          >
+            <FiMail /> Contact Info
           </button>
         </div>
 
@@ -874,28 +932,6 @@ export default function AdminDashboardPage() {
                   className="mt-1.5 w-full rounded-2xl border border-black/10 bg-white/40 px-4 py-3 text-xs outline-none dark:border-white/10 dark:bg-zinc-900/30"
                 />
               </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-300">Email</label>
-                <input
-                  type="email"
-                  value={siteInfo.email || ""}
-                  onChange={(e) => setSiteInfo((s) => ({ ...s, email: e.target.value }))}
-                  placeholder="mahmudkayes30@gmail.com"
-                  className="mt-1.5 w-full rounded-2xl border border-black/10 bg-white/40 px-4 py-3 text-xs outline-none dark:border-white/10 dark:bg-zinc-900/30"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-300">WhatsApp</label>
-                <input
-                  type="text"
-                  value={siteInfo.whatsapp || ""}
-                  onChange={(e) => setSiteInfo((s) => ({ ...s, whatsapp: e.target.value }))}
-                  placeholder="+8801931835697"
-                  className="mt-1.5 w-full rounded-2xl border border-black/10 bg-white/40 px-4 py-3 text-xs outline-none dark:border-white/10 dark:bg-zinc-900/30"
-                />
-              </div>
             </div>
 
             <div>
@@ -907,6 +943,60 @@ export default function AdminDashboardPage() {
                 placeholder="Front-End Developer building fast, accessible web apps..."
                 className="mt-1.5 w-full rounded-2xl border border-black/10 bg-white/40 px-4 py-3 text-xs outline-none dark:border-white/10 dark:bg-zinc-900/30 resize-none"
               />
+            </div>
+
+            {/* Hero Section Designation Titles (Typewriter Loop) */}
+            <div className="space-y-3 pt-4 border-t border-black/5 dark:border-white/10">
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                  Hero Section Designation Titles (Typewriter Loop)
+                </h3>
+                <p className="text-[11px] text-zinc-400 mt-0.5">
+                  These titles loop one-by-one in the Hero section typewriter animation on your homepage.
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newDesignation}
+                  onChange={(e) => setNewDesignation(e.target.value)}
+                  placeholder="Add role title (e.g. Next.js & React Developer)"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddDesignation();
+                    }
+                  }}
+                  className="w-full max-w-md rounded-2xl border border-black/10 bg-white/40 px-4 py-2.5 text-xs outline-none dark:border-white/10 dark:bg-zinc-900/30"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddDesignation}
+                  className="inline-flex items-center gap-1.5 rounded-2xl bg-zinc-950 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-zinc-900 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100"
+                >
+                  <FiPlus /> Add Title
+                </button>
+              </div>
+
+              <div className="flex flex-wrap gap-2 pt-1">
+                {(siteInfo.designationLoop || []).map((title, idx) => (
+                  <span
+                    key={title + idx}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-zinc-100 px-3.5 py-1.5 text-xs font-semibold text-zinc-800 backdrop-blur dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-200"
+                  >
+                    <span>{title}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveDesignation(idx)}
+                      className="rounded-full p-0.5 text-rose-500 hover:bg-rose-500/10 dark:hover:bg-rose-500/20"
+                      title="Remove title"
+                    >
+                      <FiX className="text-xs" />
+                    </button>
+                  </span>
+                ))}
+              </div>
             </div>
 
             {/* Images Upload */}
@@ -923,10 +1013,10 @@ export default function AdminDashboardPage() {
               />
             </div>
 
-            {/* Social Links */}
+            {/* Social Media Links */}
             <div className="space-y-3 pt-4 border-t border-black/5 dark:border-white/10">
               <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500">Social Media Links</h3>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <div>
                   <label className="block text-[11px] font-semibold text-zinc-600 dark:text-zinc-400">GitHub URL</label>
                   <input
@@ -948,6 +1038,66 @@ export default function AdminDashboardPage() {
                       setSiteInfo((s) => ({ ...s, socials: { ...s.socials, linkedin: e.target.value } }))
                     }
                     placeholder="https://linkedin.com/in/kayesmahmud"
+                    className="mt-1 w-full rounded-2xl border border-black/10 bg-white/40 px-4 py-2.5 text-xs outline-none dark:border-white/10 dark:bg-zinc-900/30"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-zinc-600 dark:text-zinc-400">Twitter / X URL</label>
+                  <input
+                    type="url"
+                    value={siteInfo.socials?.twitter || ""}
+                    onChange={(e) =>
+                      setSiteInfo((s) => ({ ...s, socials: { ...s.socials, twitter: e.target.value } }))
+                    }
+                    placeholder="https://x.com/kayesmahmud"
+                    className="mt-1 w-full rounded-2xl border border-black/10 bg-white/40 px-4 py-2.5 text-xs outline-none dark:border-white/10 dark:bg-zinc-900/30"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-zinc-600 dark:text-zinc-400">Facebook URL</label>
+                  <input
+                    type="url"
+                    value={siteInfo.socials?.facebook || ""}
+                    onChange={(e) =>
+                      setSiteInfo((s) => ({ ...s, socials: { ...s.socials, facebook: e.target.value } }))
+                    }
+                    placeholder="https://facebook.com/kayesmahmud"
+                    className="mt-1 w-full rounded-2xl border border-black/10 bg-white/40 px-4 py-2.5 text-xs outline-none dark:border-white/10 dark:bg-zinc-900/30"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-zinc-600 dark:text-zinc-400">YouTube Channel URL</label>
+                  <input
+                    type="url"
+                    value={siteInfo.socials?.youtube || ""}
+                    onChange={(e) =>
+                      setSiteInfo((s) => ({ ...s, socials: { ...s.socials, youtube: e.target.value } }))
+                    }
+                    placeholder="https://youtube.com/@kayesmahmud"
+                    className="mt-1 w-full rounded-2xl border border-black/10 bg-white/40 px-4 py-2.5 text-xs outline-none dark:border-white/10 dark:bg-zinc-900/30"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-zinc-600 dark:text-zinc-400">Instagram Profile URL</label>
+                  <input
+                    type="url"
+                    value={siteInfo.socials?.instagram || ""}
+                    onChange={(e) =>
+                      setSiteInfo((s) => ({ ...s, socials: { ...s.socials, instagram: e.target.value } }))
+                    }
+                    placeholder="https://instagram.com/kayesmahmud"
+                    className="mt-1 w-full rounded-2xl border border-black/10 bg-white/40 px-4 py-2.5 text-xs outline-none dark:border-white/10 dark:bg-zinc-900/30"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-zinc-600 dark:text-zinc-400">LeetCode Profile URL</label>
+                  <input
+                    type="url"
+                    value={siteInfo.socials?.leetcode || ""}
+                    onChange={(e) =>
+                      setSiteInfo((s) => ({ ...s, socials: { ...s.socials, leetcode: e.target.value } }))
+                    }
+                    placeholder="https://leetcode.com/kayesmahmud"
                     className="mt-1 w-full rounded-2xl border border-black/10 bg-white/40 px-4 py-2.5 text-xs outline-none dark:border-white/10 dark:bg-zinc-900/30"
                   />
                 </div>
@@ -1251,6 +1401,70 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        ) : null}
+
+        {/* TAB 7: CONTACT SECTION */}
+        {activeTab === "contact" ? (
+          <div className="rounded-3xl border border-black/10 bg-[var(--card)] p-6 backdrop-blur dark:border-white/10 space-y-6">
+            <div>
+              <h2 className="text-base font-bold">Edit Contact Section Details</h2>
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                Manage contact info for your portfolio. If an optional field (like WhatsApp or Phone) is left empty, it will be automatically hidden from the public view.
+              </p>
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-300">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={contactInfo.email || ""}
+                  onChange={(e) => setContactInfo((c) => ({ ...c, email: e.target.value }))}
+                  placeholder="mahmudkayes30@gmail.com"
+                  className="mt-1.5 w-full rounded-2xl border border-black/10 bg-white/40 px-4 py-3 text-xs outline-none dark:border-white/10 dark:bg-zinc-900/30"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-300">
+                  Contact Phone Number <span className="font-normal text-zinc-400">(Optional - Leave empty to hide)</span>
+                </label>
+                <input
+                  type="text"
+                  value={contactInfo.phone || ""}
+                  onChange={(e) => setContactInfo((c) => ({ ...c, phone: e.target.value }))}
+                  placeholder="+8801931835697"
+                  className="mt-1.5 w-full rounded-2xl border border-black/10 bg-white/40 px-4 py-3 text-xs outline-none dark:border-white/10 dark:bg-zinc-900/30"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-300">
+                  WhatsApp Number / Direct Link <span className="font-normal text-zinc-400">(Optional - Leave empty to hide)</span>
+                </label>
+                <input
+                  type="text"
+                  value={contactInfo.whatsapp || ""}
+                  onChange={(e) => setContactInfo((c) => ({ ...c, whatsapp: e.target.value }))}
+                  placeholder="+8801931835697 or https://wa.me/8801931835697"
+                  className="mt-1.5 w-full rounded-2xl border border-black/10 bg-white/40 px-4 py-3 text-xs outline-none dark:border-white/10 dark:bg-zinc-900/30"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-4 border-t border-black/5 dark:border-white/10">
+              <button
+                onClick={handleSaveContactInfo}
+                disabled={saving}
+                className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-6 py-3 text-xs font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-50"
+              >
+                <FiSave />
+                <span>{saving ? "Saving..." : "Save Contact Info"}</span>
+              </button>
             </div>
           </div>
         ) : null}
