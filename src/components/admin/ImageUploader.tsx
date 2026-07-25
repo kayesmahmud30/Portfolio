@@ -2,15 +2,23 @@
 
 import { useState, type ChangeEvent } from "react";
 import Image from "next/image";
-import { FiUploadCloud, FiCheckCircle, FiLoader } from "react-icons/fi";
+import { FiUploadCloud, FiCheckCircle, FiLoader, FiTrash2 } from "react-icons/fi";
 
 interface ImageUploaderProps {
   currentUrl?: string;
   onUpload: (url: string) => void;
+  onClear?: () => void;
+  allowClear?: boolean;
   label?: string;
 }
 
-export default function ImageUploader({ currentUrl, onUpload, label = "Upload Image" }: ImageUploaderProps) {
+export default function ImageUploader({
+  currentUrl,
+  onUpload,
+  onClear,
+  allowClear = false,
+  label = "Upload Image",
+}: ImageUploaderProps) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string>(currentUrl || "");
   const [error, setError] = useState<string>("");
@@ -46,11 +54,30 @@ export default function ImageUploader({ currentUrl, onUpload, label = "Upload Im
     }
   }
 
+  function handleClear() {
+    setPreview("");
+    setError("");
+    onClear?.();
+    onUpload("");
+  }
+
   return (
     <div className="space-y-2">
-      <span className="text-xs font-semibold tracking-wide text-zinc-600 dark:text-zinc-300">
-        {label}
-      </span>
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold tracking-wide text-zinc-600 dark:text-zinc-300">
+          {label}
+        </span>
+        {allowClear && preview ? (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="inline-flex items-center gap-1 rounded-full border border-rose-500/20 bg-rose-500/10 px-2.5 py-1 text-[10px] font-semibold text-rose-600 transition hover:bg-rose-500/20 dark:text-rose-400"
+          >
+            <FiTrash2 className="text-[10px]" />
+            Remove Image
+          </button>
+        ) : null}
+      </div>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         {preview ? (
@@ -74,7 +101,7 @@ export default function ImageUploader({ currentUrl, onUpload, label = "Upload Im
           ) : (
             <>
               <FiUploadCloud className="text-[18px] text-zinc-500 group-hover:text-indigo-500" />
-              <span>Choose & Upload Image</span>
+              <span>{preview ? "Replace Image" : "Choose & Upload Image"}</span>
             </>
           )}
 
@@ -92,7 +119,11 @@ export default function ImageUploader({ currentUrl, onUpload, label = "Upload Im
         <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
           <FiCheckCircle /> Image attached / uploaded successfully
         </div>
-      ) : null}
+      ) : (
+        <div className="text-xs text-zinc-400 dark:text-zinc-500">
+          No image set — section will render without a banner.
+        </div>
+      )}
 
       {error ? (
         <div className="text-xs font-medium text-rose-600 dark:text-rose-400">
