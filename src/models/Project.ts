@@ -19,11 +19,12 @@ const ProjectSchema = new Schema<IProjectDocument>(
     challenges: [{ type: String }],
     improvements: [{ type: String }],
     order: { type: Number, default: 0 },
+    pinned: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
 
-// Clear model cache in dev mode so schema updates (e.g. githubServerUrl) apply immediately
+// Clear model cache in dev mode so schema updates apply immediately
 if (process.env.NODE_ENV !== "production" && mongoose.models.Project) {
   delete mongoose.models.Project;
 }

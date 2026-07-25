@@ -30,6 +30,17 @@ export interface NavLink {
   label: string;
 }
 
+export interface AboutCard {
+  heading: string;
+  paragraphs: string[];
+}
+
+export interface AboutConfig {
+  title: string;
+  subtitle: string;
+  cards: AboutCard[];
+}
+
 export interface Project {
   slug: string;
   title: string;
@@ -42,6 +53,7 @@ export interface Project {
   githubServerUrl?: string;
   challenges: string[];
   improvements: string[];
+  pinned?: boolean;
 }
 
 export interface Skill {

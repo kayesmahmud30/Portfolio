@@ -56,3 +56,30 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ ok: false, error: msg }, { status: 500 });
   }
 }
+
+export async function PATCH(_req: NextRequest, { params }: RouteParams) {
+  try {
+    const { id } = await params;
+    const db = await connectDB();
+
+    if (!db) {
+      return NextResponse.json(
+        { ok: false, error: "Database not connected. Please configure MONGODB_URI." },
+        { status: 503 }
+      );
+    }
+
+    const project = await ProjectModel.findById(id);
+    if (!project) {
+      return NextResponse.json({ ok: false, error: "Project not found." }, { status: 404 });
+    }
+
+    project.pinned = !project.pinned;
+    await project.save();
+
+    return NextResponse.json({ ok: true, data: project }, { status: 200 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : "Failed to toggle pin.";
+    return NextResponse.json({ ok: false, error: msg }, { status: 500 });
+  }
+}
