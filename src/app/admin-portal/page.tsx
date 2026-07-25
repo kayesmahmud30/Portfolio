@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, createElement } from "react";
+import React, { useEffect, useState, useCallback, createElement } from "react";
 import { useRouter } from "next/navigation";
 import Container from "@/components/Container";
 import ImageUploader from "@/components/admin/ImageUploader";
@@ -9,9 +9,10 @@ import EducationModal from "@/components/admin/EducationModal";
 import ExperienceModal from "@/components/admin/ExperienceModal";
 import PromptModal from "@/components/admin/PromptModal";
 import ConfirmModal from "@/components/admin/ConfirmModal";
+import ToastPortal from "@/components/admin/ToastPortal";
 import ThemeToggle from "@/components/ThemeToggle";
 import { signOut, authClient } from "@/lib/auth-client";
-import type { Project, SiteConfig, SkillGroup, EducationItem, ExperienceItem, ContactConfig } from "@/types";
+import type { Project, SiteConfig, SkillGroup, EducationItem, ExperienceItem, ContactConfig, AboutConfig, AboutCard } from "@/types";
 import { getSkillIcon } from "@/lib/skillIcons";
 import {
   FiGrid,
@@ -29,17 +30,15 @@ import {
   FiBriefcase,
   FiShield,
   FiSearch,
-  FiChevronDown,
-  FiChevronUp,
-  FiMenu,
   FiArrowUp,
   FiArrowDown,
   FiMove,
   FiX,
   FiMail,
 } from "react-icons/fi";
+import { BsPin, BsPinFill } from "react-icons/bs";
 
-type Tab = "overview" | "projects" | "profile" | "skills" | "education" | "experience" | "contact";
+type Tab = "overview" | "projects" | "profile" | "skills" | "education" | "experience" | "contact" | "about";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -54,6 +53,12 @@ export default function AdminDashboardPage() {
   const [skillsList, setSkillsList] = useState<SkillGroup[]>([]);
   const [educationList, setEducationList] = useState<EducationItem[]>([]);
   const [experienceList, setExperienceList] = useState<ExperienceItem[]>([]);
+  const [aboutInfo, setAboutInfo] = useState<AboutConfig>({
+    title: "A little about me",
+    subtitle: "",
+    cards: [],
+  });
+  const [savingAbout, setSavingAbout] = useState(false);
 
   // Project Filter
   const [projectSearch, setProjectSearch] = useState("");
@@ -101,13 +106,14 @@ export default function AdminDashboardPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [siteRes, projectsRes, skillsRes, eduRes, expRes, contactRes] = await Promise.all([
+      const [siteRes, projectsRes, skillsRes, eduRes, expRes, contactRes, aboutRes] = await Promise.all([
         fetch("/api/admin/site"),
         fetch("/api/admin/projects"),
         fetch("/api/admin/skills"),
         fetch("/api/admin/education"),
         fetch("/api/admin/experience"),
         fetch("/api/admin/contact-config"),
+        fetch("/api/admin/about"),
       ]);
 
       const siteData = await siteRes.json();
@@ -116,6 +122,7 @@ export default function AdminDashboardPage() {
       const eduData = await eduRes.json();
       const expData = await expRes.json();
       const contactData = await contactRes.json();
+      const aboutData = await aboutRes.json();
 
       if (siteData.ok) setSiteInfo(siteData.data);
       if (projectsData.ok) setProjectsList(projectsData.data);
@@ -123,6 +130,7 @@ export default function AdminDashboardPage() {
       if (eduData.ok) setEducationList(eduData.data);
       if (expData.ok) setExperienceList(expData.data);
       if (contactData.ok) setContactInfo(contactData.data);
+      if (aboutData.ok) setAboutInfo(aboutData.data);
     } catch {
       showToast("error", "Failed to load dashboard data.");
     } finally {
@@ -206,6 +214,20 @@ export default function AdminDashboardPage() {
         }
       },
     });
+  }
+
+  async function handleTogglePin(id: string) {
+    try {
+      const res = await fetch(`/api/admin/projects/${id}`, { method: "PATCH" });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error);
+      const isPinned = data.data?.pinned;
+      showToast("success", isPinned ? "Project pinned to homepage." : "Project unpinned from homepage.");
+      fetchData();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to toggle pin.";
+      showToast("error", msg);
+    }
   }
 
   // --- Actions: Profile & Banner ---
@@ -542,19 +564,8 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black text-zinc-950 dark:text-zinc-50 pb-16">
-      {/* Toast Notification */}
-      {toast ? (
-        <div
-          className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-2xl px-5 py-3.5 shadow-2xl text-xs font-semibold backdrop-blur ${
-            toast.type === "success"
-              ? "bg-emerald-500/90 text-white dark:bg-emerald-600/90"
-              : "bg-rose-500/90 text-white dark:bg-rose-600/90"
-          }`}
-        >
-          {toast.type === "success" ? <FiCheckCircle className="text-base shrink-0" /> : <FiAlertCircle className="text-base shrink-0" />}
-          <span>{toast.msg}</span>
-        </div>
-      ) : null}
+      {/* Toast — Portaled into document.body so fixed positioning is always viewport-relative */}
+      <ToastPortal toast={toast} />
 
       {/* Header Bar */}
       <header className="sticky top-0 z-30 border-b border-black/5 bg-white/80 backdrop-blur dark:border-white/10 dark:bg-black/80">
@@ -587,159 +598,115 @@ export default function AdminDashboardPage() {
 
       {/* Main Content & Responsive Navigation */}
       <Container className="mt-6 sm:mt-8 space-y-6">
-        {/* Mobile Navigation Dropdown Menu (For Smaller Devices < md) */}
-        <div className="relative md:hidden">
+
+        {/* ── Mobile / Tablet: Dropdown (< lg) ─────────────────────────── */}
+        <div className="relative lg:hidden">
           <button
             type="button"
-            onClick={() => setMobileMenuOpen((open) => !open)}
+            onClick={() => setMobileMenuOpen((o) => !o)}
             className="flex w-full items-center justify-between rounded-3xl border border-black/10 bg-[var(--card)] px-5 py-3.5 text-xs font-bold backdrop-blur shadow-sm dark:border-white/10"
           >
             <div className="flex items-center gap-2.5">
               <span className="grid h-7 w-7 place-items-center rounded-xl bg-zinc-950 text-white dark:bg-white dark:text-zinc-950">
-                {activeTab === "overview" && <FiGrid className="text-sm" />}
-                {activeTab === "projects" && <FiLayers className="text-sm" />}
-                {activeTab === "profile" && <FiUser className="text-sm" />}
-                {activeTab === "skills" && <FiBookOpen className="text-sm" />}
-                {activeTab === "education" && <FiBookOpen className="text-sm" />}
+                {activeTab === "overview"   && <FiGrid className="text-sm" />}
+                {activeTab === "projects"   && <FiLayers className="text-sm" />}
+                {activeTab === "profile"    && <FiUser className="text-sm" />}
+                {activeTab === "skills"     && <FiBookOpen className="text-sm" />}
+                {activeTab === "education"  && <FiBookOpen className="text-sm" />}
                 {activeTab === "experience" && <FiBriefcase className="text-sm" />}
-                {activeTab === "contact" && <FiMail className="text-sm" />}
+                {activeTab === "contact"    && <FiMail className="text-sm" />}
+                {activeTab === "about"      && <FiUser className="text-sm" />}
               </span>
-              <span className="capitalize">{activeTab} Management</span>
+              <span className="capitalize font-semibold">
+                {{
+                  overview: "Overview", projects: "Projects", profile: "Profile & Banner",
+                  skills: "Skills Manager", education: "Education", experience: "Experience",
+                  contact: "Contact Info", about: "About Section",
+                }[activeTab]}
+              </span>
             </div>
-
-            <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
-              <span className="text-[11px] font-semibold">Select Section</span>
-              {mobileMenuOpen ? <FiChevronUp className="text-base" /> : <FiChevronDown className="text-base" />}
+            <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
+              <span className="text-[10px]">Switch tab</span>
+              <svg className={`h-4 w-4 transition-transform ${mobileMenuOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
             </div>
           </button>
 
-          {mobileMenuOpen ? (
+          {mobileMenuOpen && (
             <div className="absolute left-0 right-0 top-full z-40 mt-2 space-y-1 rounded-3xl border border-black/10 bg-[var(--card)] p-2 shadow-2xl backdrop-blur dark:border-white/10">
-              {[
-                { id: "overview", label: "Overview", icon: FiGrid, count: null },
-                { id: "projects", label: "Projects", icon: FiLayers, count: projectsList.length },
-                { id: "profile", label: "Profile & Banner", icon: FiUser, count: null },
-                { id: "skills", label: "Skills Manager", icon: FiBookOpen, count: null },
-                { id: "education", label: "Education History", icon: FiBookOpen, count: educationList.length },
-                { id: "experience", label: "Work Experience", icon: FiBriefcase, count: experienceList.length },
-                { id: "contact", label: "Contact Info", icon: FiMail, count: null },
-              ].map((tabItem) => {
-                const IconComp = tabItem.icon;
-                const isActive = activeTab === tabItem.id;
+              {([
+                { id: "overview",   label: "Overview",        icon: FiGrid,      count: null },
+                { id: "projects",   label: "Projects",        icon: FiLayers,    count: projectsList.length },
+                { id: "profile",    label: "Profile & Banner",icon: FiUser,      count: null },
+                { id: "skills",     label: "Skills Manager",  icon: FiBookOpen,  count: null },
+                { id: "education",  label: "Education",       icon: FiBookOpen,  count: educationList.length },
+                { id: "experience", label: "Experience",      icon: FiBriefcase, count: experienceList.length },
+                { id: "contact",    label: "Contact Info",    icon: FiMail,      count: null },
+                { id: "about",      label: "About Section",   icon: FiUser,      count: null },
+              ] as { id: Tab; label: string; icon: React.ComponentType<{ className?: string }>; count: number | null }[]).map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
                 return (
                   <button
-                    key={tabItem.id}
-                    onClick={() => {
-                      setActiveTab(tabItem.id as Tab);
-                      setMobileMenuOpen(false);
-                    }}
+                    key={item.id}
+                    type="button"
+                    onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false); }}
                     className={`flex w-full items-center justify-between rounded-2xl px-4 py-3 text-xs font-semibold transition ${
-                      isActive
-                        ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950"
-                        : "text-zinc-700 hover:bg-black/5 dark:text-zinc-300 dark:hover:bg-white/5"
+                      isActive ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950" : "text-zinc-700 hover:bg-black/5 dark:text-zinc-300 dark:hover:bg-white/5"
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <IconComp className="text-sm" />
-                      <span>{tabItem.label}</span>
+                      <Icon className="text-sm" />
+                      <span>{item.label}</span>
                     </div>
-                    {tabItem.count !== null ? (
-                      <span
-                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                          isActive
-                            ? "bg-white/20 text-white dark:bg-black/20 dark:text-zinc-950"
-                            : "bg-black/5 dark:bg-white/10 text-zinc-600 dark:text-zinc-300"
-                        }`}
-                      >
-                        {tabItem.count}
+                    {item.count !== null && (
+                      <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${isActive ? "bg-white/20 dark:bg-black/20" : "bg-black/5 dark:bg-white/10 text-zinc-500"}`}>
+                        {item.count}
                       </span>
-                    ) : null}
+                    )}
                   </button>
                 );
               })}
             </div>
-          ) : null}
+          )}
         </div>
 
-        {/* Desktop Navigation Tabs (Visible on md+) */}
-        <div className="hidden md:flex overflow-x-auto rounded-3xl border border-black/10 bg-[var(--card)] p-1.5 backdrop-blur dark:border-white/10 scrollbar-none">
-          <button
-            onClick={() => setActiveTab("overview")}
-            className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-4 py-2.5 text-xs font-semibold transition ${
-              activeTab === "overview"
-                ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 shadow-md"
-                : "text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
-            }`}
-          >
-            <FiGrid /> Overview
-          </button>
-
-          <button
-            onClick={() => setActiveTab("projects")}
-            className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-4 py-2.5 text-xs font-semibold transition ${
-              activeTab === "projects"
-                ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 shadow-md"
-                : "text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
-            }`}
-          >
-            <FiLayers /> Projects ({projectsList.length})
-          </button>
-
-          <button
-            onClick={() => setActiveTab("profile")}
-            className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-4 py-2.5 text-xs font-semibold transition ${
-              activeTab === "profile"
-                ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 shadow-md"
-                : "text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
-            }`}
-          >
-            <FiUser /> Profile & Banner
-          </button>
-
-          <button
-            onClick={() => setActiveTab("skills")}
-            className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-4 py-2.5 text-xs font-semibold transition ${
-              activeTab === "skills"
-                ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 shadow-md"
-                : "text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
-            }`}
-          >
-            <FiBookOpen /> Skills Manager
-          </button>
-
-          <button
-            onClick={() => setActiveTab("education")}
-            className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-4 py-2.5 text-xs font-semibold transition ${
-              activeTab === "education"
-                ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 shadow-md"
-                : "text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
-            }`}
-          >
-            <FiBookOpen /> Education ({educationList.length})
-          </button>
-
-          <button
-            onClick={() => setActiveTab("experience")}
-            className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-4 py-2.5 text-xs font-semibold transition ${
-              activeTab === "experience"
-                ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 shadow-md"
-                : "text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
-            }`}
-          >
-            <FiBriefcase /> Experience ({experienceList.length})
-          </button>
-          
-          <button
-            onClick={() => setActiveTab("contact")}
-            className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-4 py-2.5 text-xs font-semibold transition ${
-              activeTab === "contact"
-                ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 shadow-md"
-                : "text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
-            }`}
-          >
-            <FiMail /> Contact Info
-          </button>
+        {/* ── Desktop: Single-row pill tabs (lg+) ───────────────────────── */}
+        <div className="hidden lg:flex rounded-3xl border border-black/10 bg-[var(--card)] p-1.5 backdrop-blur dark:border-white/10">
+          {([
+            { id: "overview",   label: "Overview",      icon: FiGrid,      count: null },
+            { id: "projects",   label: "Projects",      icon: FiLayers,    count: projectsList.length },
+            { id: "profile",    label: "Profile",       icon: FiUser,      count: null },
+            { id: "skills",     label: "Skills",        icon: FiBookOpen,  count: null },
+            { id: "education",  label: "Education",     icon: FiBookOpen,  count: educationList.length },
+            { id: "experience", label: "Experience",    icon: FiBriefcase, count: experienceList.length },
+            { id: "contact",    label: "Contact",       icon: FiMail,      count: null },
+            { id: "about",      label: "About",         icon: FiUser,      count: null },
+          ] as { id: Tab; label: string; icon: React.ComponentType<{ className?: string }>; count: number | null }[]).map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setActiveTab(item.id)}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-2xl px-3 py-2.5 text-xs font-semibold transition whitespace-nowrap ${
+                  isActive
+                    ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 shadow-md"
+                    : "text-zinc-600 hover:bg-black/5 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
+                }`}
+              >
+                <Icon className="shrink-0" />
+                <span>{item.label}</span>
+                {item.count !== null && (
+                  <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${isActive ? "bg-white/20 dark:bg-black/20" : "bg-black/5 dark:bg-white/10"}`}>
+                    {item.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
+
 
         {/* TAB 1: OVERVIEW */}
         {activeTab === "overview" ? (
@@ -850,13 +817,36 @@ export default function AdminDashboardPage() {
                 {filteredProjects.map((p) => (
                   <div
                     key={(p as { _id?: string })._id || p.slug}
-                    className="flex flex-col justify-between rounded-3xl border border-black/10 bg-[var(--card)] p-5 backdrop-blur dark:border-white/10"
+                    className={`relative flex flex-col justify-between rounded-3xl border bg-[var(--card)] p-5 backdrop-blur ${
+                      p.pinned
+                        ? "border-indigo-500/50 shadow-indigo-500/10 shadow-md dark:border-indigo-400/50"
+                        : "border-black/10 dark:border-white/10"
+                    }`}
                   >
+                    {/* Pin Button (top-right corner) */}
+                    <button
+                      type="button"
+                      title={p.pinned ? "Unpin from homepage" : "Pin to homepage"}
+                      onClick={() => handleTogglePin((p as unknown as { _id: string })._id)}
+                      className={`absolute right-4 top-4 z-10 rounded-full p-1.5 text-xs transition ${
+                        p.pinned
+                          ? "bg-indigo-600 text-white shadow-md"
+                          : "bg-black/5 text-zinc-500 hover:bg-indigo-600/10 hover:text-indigo-600 dark:bg-white/10 dark:text-zinc-400 dark:hover:text-indigo-400"
+                      }`}
+                    >
+                      {p.pinned ? <BsPinFill className="text-sm" /> : <BsPin className="text-sm" />}
+                    </button>
+
                     <div>
                       <div className="relative h-40 w-full overflow-hidden rounded-2xl border border-black/10 bg-black/5 dark:border-white/10 dark:bg-white/5">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={p.image} alt={p.title} className="h-full w-full object-cover" />
                       </div>
+                      {p.pinned ? (
+                        <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-indigo-600/10 px-2.5 py-1 text-[10px] font-semibold text-indigo-600 dark:bg-indigo-400/10 dark:text-indigo-400">
+                          <BsPinFill className="text-[10px]" /> Pinned to Homepage
+                        </div>
+                      ) : null}
                       <h3 className="mt-3 text-sm font-bold tracking-tight">{p.title}</h3>
                       <p className="mt-1 line-clamp-2 text-xs text-zinc-600 dark:text-zinc-400">{p.summary}</p>
                       <div className="mt-2 flex flex-wrap gap-1">
@@ -1009,7 +999,9 @@ export default function AdminDashboardPage() {
               <ImageUploader
                 label="Hero Banner Image (Cloudinary)"
                 currentUrl={siteInfo.bannerImage}
+                allowClear
                 onUpload={(url) => setSiteInfo((s) => ({ ...s, bannerImage: url }))}
+                onClear={() => setSiteInfo((s) => ({ ...s, bannerImage: "" }))}
               />
             </div>
 
@@ -1464,6 +1456,189 @@ export default function AdminDashboardPage() {
               >
                 <FiSave />
                 <span>{saving ? "Saving..." : "Save Contact Info"}</span>
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {/* TAB 8: ABOUT SECTION */}
+        {activeTab === "about" ? (
+          <div className="space-y-6">
+            {/* Section Heading */}
+            <div className="rounded-3xl border border-black/10 bg-[var(--card)] p-6 backdrop-blur dark:border-white/10 space-y-5">
+              <h2 className="text-base font-bold">About Section — Heading</h2>
+
+              <div>
+                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-300">
+                  Section Title
+                </label>
+                <input
+                  type="text"
+                  value={aboutInfo.title}
+                  onChange={(e) => setAboutInfo((s) => ({ ...s, title: e.target.value }))}
+                  placeholder="A little about me"
+                  className="mt-1.5 w-full rounded-2xl border border-black/10 bg-white/40 px-4 py-3 text-xs outline-none transition focus:border-indigo-500 dark:border-white/10 dark:bg-zinc-900/30"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-zinc-600 dark:text-zinc-300">
+                  Subtitle / Tagline
+                </label>
+                <textarea
+                  rows={2}
+                  value={aboutInfo.subtitle}
+                  onChange={(e) => setAboutInfo((s) => ({ ...s, subtitle: e.target.value }))}
+                  placeholder="Short description shown below the title..."
+                  className="mt-1.5 w-full rounded-2xl border border-black/10 bg-white/40 px-4 py-3 text-xs outline-none transition focus:border-indigo-500 dark:border-white/10 dark:bg-zinc-900/30 resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Cards */}
+            <div className="rounded-3xl border border-black/10 bg-[var(--card)] p-6 backdrop-blur dark:border-white/10 space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-bold">About Cards</h2>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setAboutInfo((s) => ({
+                      ...s,
+                      cards: [...s.cards, { heading: "", paragraphs: [""] }],
+                    }))
+                  }
+                  className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/40 px-4 py-2 text-xs font-semibold transition hover:bg-white/80 dark:border-white/10 dark:bg-zinc-900/30 dark:hover:bg-zinc-900/60"
+                >
+                  <FiPlus className="text-sm" /> Add Card
+                </button>
+              </div>
+
+              {aboutInfo.cards.length === 0 ? (
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  No cards yet. Click &quot;Add Card&quot; to create one.
+                </p>
+              ) : (
+                <div className="space-y-6">
+                  {aboutInfo.cards.map((card: AboutCard, cardIdx: number) => (
+                    <div
+                      key={cardIdx}
+                      className="rounded-2xl border border-black/10 bg-black/5 p-5 dark:border-white/10 dark:bg-white/5 space-y-4"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <input
+                          type="text"
+                          value={card.heading}
+                          onChange={(e) => {
+                            const updated = aboutInfo.cards.map((c, i) =>
+                              i === cardIdx ? { ...c, heading: e.target.value } : c
+                            );
+                            setAboutInfo((s) => ({ ...s, cards: updated }));
+                          }}
+                          placeholder="Card heading (e.g. My journey)"
+                          className="flex-1 rounded-2xl border border-black/10 bg-white/40 px-4 py-2.5 text-xs font-semibold outline-none transition focus:border-indigo-500 dark:border-white/10 dark:bg-zinc-900/30"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setAboutInfo((s) => ({
+                              ...s,
+                              cards: s.cards.filter((_, i) => i !== cardIdx),
+                            }))
+                          }
+                          className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-2 text-xs text-rose-600 hover:bg-rose-500/20 dark:text-rose-400"
+                        >
+                          <FiTrash2 />
+                        </button>
+                      </div>
+
+                      {/* Paragraphs */}
+                      <div className="space-y-3">
+                        <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+                          Paragraphs
+                        </p>
+                        {card.paragraphs.map((para: string, paraIdx: number) => (
+                          <div key={paraIdx} className="flex items-start gap-2">
+                            <textarea
+                              rows={3}
+                              value={para}
+                              onChange={(e) => {
+                                const updatedCards = aboutInfo.cards.map((c, ci) => {
+                                  if (ci !== cardIdx) return c;
+                                  const updatedParas = c.paragraphs.map((p, pi) =>
+                                    pi === paraIdx ? e.target.value : p
+                                  );
+                                  return { ...c, paragraphs: updatedParas };
+                                });
+                                setAboutInfo((s) => ({ ...s, cards: updatedCards }));
+                              }}
+                              placeholder="Paragraph text..."
+                              className="flex-1 rounded-2xl border border-black/10 bg-white/40 px-4 py-2.5 text-xs outline-none transition focus:border-indigo-500 dark:border-white/10 dark:bg-zinc-900/30 resize-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updatedCards = aboutInfo.cards.map((c, ci) => {
+                                  if (ci !== cardIdx) return c;
+                                  return {
+                                    ...c,
+                                    paragraphs: c.paragraphs.filter((_, pi) => pi !== paraIdx),
+                                  };
+                                });
+                                setAboutInfo((s) => ({ ...s, cards: updatedCards }));
+                              }}
+                              className="mt-1 rounded-xl border border-rose-500/20 bg-rose-500/10 p-2 text-xs text-rose-600 hover:bg-rose-500/20 dark:text-rose-400"
+                            >
+                              <FiX />
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updatedCards = aboutInfo.cards.map((c, ci) =>
+                              ci === cardIdx
+                                ? { ...c, paragraphs: [...c.paragraphs, ""] }
+                                : c
+                            );
+                            setAboutInfo((s) => ({ ...s, cards: updatedCards }));
+                          }}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white/40 px-3 py-1.5 text-[11px] font-semibold transition hover:bg-white/80 dark:border-white/10 dark:bg-zinc-900/30 dark:hover:bg-zinc-900/60"
+                        >
+                          <FiPlus className="text-xs" /> Add Paragraph
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Save */}
+            <div className="flex justify-end">
+              <button
+                type="button"
+                disabled={savingAbout}
+                onClick={async () => {
+                  setSavingAbout(true);
+                  try {
+                    const res = await fetch("/api/admin/about", {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(aboutInfo),
+                    });
+                    const data = await res.json();
+                    if (!data.ok) throw new Error(data.error);
+                    showToast("success", "About section saved successfully.");
+                  } catch (err: unknown) {
+                    showToast("error", err instanceof Error ? err.message : "Failed to save.");
+                  } finally {
+                    setSavingAbout(false);
+                  }
+                }}
+                className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-6 py-3 text-xs font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-50"
+              >
+                <FiSave />
+                <span>{savingAbout ? "Saving..." : "Save About Section"}</span>
               </button>
             </div>
           </div>
