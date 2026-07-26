@@ -3,6 +3,7 @@
 import { useState, useEffect, type FormEvent } from "react";
 import type { EducationItem } from "@/types";
 import { FiX, FiSave } from "react-icons/fi";
+import ModalPortal from "@/components/admin/ModalPortal";
 
 interface EducationModalProps {
   isOpen: boolean;
@@ -50,10 +51,11 @@ export default function EducationModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+    <ModalPortal isOpen={isOpen}>
+      <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative w-full max-w-lg rounded-3xl border border-black/10 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-zinc-950">
+      <div className="relative w-full max-w-lg rounded-3xl border border-white/30 bg-white/30 p-6 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-zinc-900/30">
         <div className="flex items-center justify-between border-b border-black/5 pb-4 dark:border-white/10">
           <h2 className="text-lg font-semibold">
             {initialItem ? "Edit Education" : "Add Education"}
@@ -127,13 +129,13 @@ export default function EducationModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full px-5 py-2.5 text-sm font-semibold text-zinc-600 hover:bg-black/5 dark:text-zinc-300 dark:hover:bg-white/10"
+              className="rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-semibold backdrop-blur transition hover:bg-white/20 dark:border-white/10 dark:text-zinc-300"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="inline-flex items-center gap-2 rounded-full bg-zinc-950 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-zinc-900 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-100"
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-2.5 text-sm font-semibold backdrop-blur transition hover:bg-white/20 dark:border-white/10 dark:text-zinc-100"
             >
               <FiSave />
               <span>Save Education</span>
@@ -142,5 +144,6 @@ export default function EducationModal({
         </form>
       </div>
     </div>
+    </ModalPortal>
   );
 }
