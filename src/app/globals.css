@@ -48,6 +48,12 @@ body {
   background: rgba(99, 102, 241, 0.25);
 }
 
+/* Remove focus outline on click for all interactive elements */
+*:focus {
+  outline: none !important;
+  /* box-shadow: none !important; */
+}
+
 .section {
   scroll-margin-top: 96px;
 }
