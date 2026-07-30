@@ -12,7 +12,7 @@ All AI agents and developers working on this codebase MUST follow the standards 
 
 ---
 
-## 1. Stack & Core Technologies
+## 1. Stack & Core Technologies.
 
 - **Framework**: Next.js 16+ (App Router, React 19, Turbopack dev server)
 - **Language**: TypeScript (Strict mode enabled, 0 explicit `any` types allowed)
